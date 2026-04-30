@@ -1,7 +1,10 @@
 import request from "supertest";
 import https from "https";
 import { PassThrough } from "stream";
-import app, { clearCache } from "../server";
+import path from "path";
+import fs from "fs";
+import app from "../server";
+import { clearCache, loadCacheFromDisk } from "../cache";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -9,12 +12,32 @@ global.fetch = mockFetch;
 jest.mock("https");
 const mockGet = https.get as jest.Mock;
 
-beforeAll(() => {
+const CACHE_DIR = path.join(__dirname, "../cache");
+const CACHE_BACKUP_DIR = path.join(__dirname, "../cache_backup");
+
+beforeAll(async () => {
   jest.spyOn(console, "error").mockImplementation(() => {});
   jest.spyOn(console, "log").mockImplementation(() => {});
   jest.spyOn(console, "warn").mockImplementation(() => {});
+  // Move real cache out of the way
+  if (fs.existsSync(CACHE_DIR)) {
+    fs.renameSync(CACHE_DIR, CACHE_BACKUP_DIR);
+  }
+  await clearCache();
 });
-afterAll(() => jest.restoreAllMocks());
+
+afterAll(async () => {
+  // Clean up any files written during tests
+  await clearCache();
+  if (fs.existsSync(CACHE_DIR)) fs.rmSync(CACHE_DIR, { recursive: true });
+  // Restore real cache
+  if (fs.existsSync(CACHE_BACKUP_DIR)) {
+    fs.renameSync(CACHE_BACKUP_DIR, CACHE_DIR);
+    loadCacheFromDisk();
+  }
+  jest.restoreAllMocks();
+});
+
 afterEach(async () => {
   jest.resetAllMocks();
   await clearCache();
@@ -22,7 +45,6 @@ afterEach(async () => {
 
 describe("GET /api/trials", () => {
   it("forwards query params to CT.gov and pipes the response back", async () => {
-    // Fake upstream: a readable stream with a JSON body
     const upstream = new PassThrough();
     upstream.end(JSON.stringify({ studies: [] }));
 
@@ -67,7 +89,7 @@ describe("GET /api/trials/all", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ studies: [{ id: "NCT002" }] }), // no nextPageToken — last page
+        json: async () => ({ studies: [{ id: "NCT002" }] }),
       });
 
     const res = await request(app).get("/api/trials/all?query.cond=diabetes");
@@ -103,7 +125,6 @@ describe("GET /api/trials/all", () => {
     await request(app).get("/api/trials/all?query.cond=diabetes");
     await request(app).get("/api/trials/all?query.cond=diabetes");
 
-    // CT.gov should only have been called once despite two requests
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
