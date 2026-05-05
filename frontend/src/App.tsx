@@ -4,12 +4,13 @@ import { TrialTable } from "./components/TrialTable";
 import { UsStatesMap } from "./components/maps/UsStatesMap";
 import { HeatMap } from "./components/maps/HeatMap";
 import { ScatterMap } from "./components/maps/ScatterMap";
-import { ONCOLOGY, NSCLC, RECRUITING_DIABETES } from "./api/queries";
+import { ONCOLOGY, NSCLC, NSCLC_v2, RECRUITING_DIABETES } from "./api/queries";
 import type { FetchTrialsParams } from "./api/trials";
 
 const PRESETS: { label: string; params: FetchTrialsParams }[] = [
   { label: "Oncology", params: ONCOLOGY },
   { label: "NSCLC", params: NSCLC },
+  { label: "NSCLC_v2", params: NSCLC_v2 },
   { label: "Recruiting Diabetes (Phase 2)", params: RECRUITING_DIABETES },
 ];
 

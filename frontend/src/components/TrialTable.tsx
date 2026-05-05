@@ -7,6 +7,7 @@ interface Props {
 
 export function TrialTable({ trials }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [jsonId, setJsonId] = useState<string | null>(null);
 
   if (trials.length === 0) {
     return <p style={{ padding: "16px", color: "var(--text)" }}>No trials to display.</p>;
@@ -16,6 +17,7 @@ export function TrialTable({ trials }: Props) {
     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
       {trials.map((trial) => {
         const isOpen = expandedId === trial.nctId;
+        const showJson = jsonId === trial.nctId;
         return (
           <li
             key={trial.nctId}
@@ -91,6 +93,39 @@ export function TrialTable({ trials }: Props) {
                     </p>
                   </div>
                 )}
+                <div>
+                  <button
+                    onClick={() => setJsonId(showJson ? null : trial.nctId)}
+                    style={{
+                      marginTop: "4px",
+                      padding: "4px 10px",
+                      fontSize: "12px",
+                      borderRadius: "4px",
+                      border: "1px solid var(--border)",
+                      background: "none",
+                      color: "var(--text)",
+                      cursor: "pointer",
+                      font: "inherit",
+                    }}
+                  >
+                    {showJson ? "Hide JSON" : "View JSON"}
+                  </button>
+                  {showJson && (
+                    <pre
+                      style={{
+                        marginTop: "8px",
+                        padding: "12px",
+                        background: "var(--code-bg)",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        overflowX: "auto",
+                        color: "var(--text-h)",
+                      }}
+                    >
+                      {JSON.stringify(trial, null, 2)}
+                    </pre>
+                  )}
+                </div>
               </div>
             )}
           </li>
