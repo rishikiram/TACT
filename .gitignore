@@ -17,3 +17,6 @@ dist-ssr/
 
 # Backend disk cache
 backend/cache/
+
+# pycache
+__pycache__/
