@@ -20,3 +20,5 @@ backend/cache/
 
 # pycache
 __pycache__/
+
+data/*.db
