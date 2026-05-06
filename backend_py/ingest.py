@@ -3,49 +3,50 @@
 Fetch studies from CT.gov, clean them, and write to SQLite.
 
 Usage:
-    python ingest.py --condition "cancer" --status "RECRUITING"
-    python ingest.py --condition "diabetes" --sponsor "NIH"
+    python ingest.py <preset>        # run a named preset from queries.yaml
+    python ingest.py --list          # show available presets
 
-Any key=value pair maps directly to CT.gov API query params.
-See https://clinicaltrials.gov/data-api/api for the full param reference.
+Presets are defined in queries.yaml.
 """
 
 import argparse
-import sys
+from pathlib import Path
+
+import yaml
 
 from clean import clean_studies
 from ctgov import fetch_all_pages
 from db import init_db, upsert_studies, count
 
-
-CT_GOV_PARAM_ALIASES = {
-    "condition": "query.cond",
-    "sponsor":   "query.spons",
-    "status":    "filter.overallStatus",
-    "phase":     "filter.phase",
-    "type":      "filter.studyType",
-}
+QUERIES_FILE = Path(__file__).parent / "queries.yaml"
 
 
-def parse_args() -> dict:
+def load_presets() -> dict:
+    with open(QUERIES_FILE) as f:
+        return yaml.safe_load(f)
+
+
+def parse_args(presets: dict):
     parser = argparse.ArgumentParser(description="Ingest CT.gov studies into SQLite.")
-    parser.add_argument("--condition", help="Condition or disease (query.cond)")
-    parser.add_argument("--sponsor",   help="Sponsor name (query.spons)")
-    parser.add_argument("--status",    help="Overall status filter (e.g. RECRUITING)")
-    parser.add_argument("--phase",     help="Phase filter (e.g. PHASE2)")
-    parser.add_argument("--type",      help="Study type filter (e.g. INTERVENTIONAL)")
+    parser.add_argument("preset", nargs="?", help="Preset name from queries.yaml")
+    parser.add_argument("--list", action="store_true", help="List available presets")
     args = parser.parse_args()
 
-    params = {}
-    for arg_name, ct_param in CT_GOV_PARAM_ALIASES.items():
-        value = getattr(args, arg_name)
-        if value:
-            params[ct_param] = value
+    if args.list:
+        print("Available presets:")
+        for name, params in presets.items():
+            print(f"  {name}")
+            for k, v in params.items():
+                print(f"    {k}: {v}")
+        raise SystemExit(0)
 
-    if not params:
-        parser.error("Provide at least one filter (--condition, --sponsor, --status, --phase, --type)")
+    if not args.preset:
+        parser.error("Provide a preset name, or --list to see options")
 
-    return params
+    if args.preset not in presets:
+        parser.error(f"Unknown preset '{args.preset}'. Run --list to see options.")
+
+    return presets[args.preset]
 
 
 def ingest(params: dict) -> None:
@@ -67,5 +68,6 @@ def ingest(params: dict) -> None:
 
 
 if __name__ == "__main__":
-    params = parse_args()
+    presets = load_presets()
+    params = parse_args(presets)
     ingest(params)

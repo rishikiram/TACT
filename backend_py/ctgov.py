@@ -3,7 +3,7 @@ import time
 import requests
 
 CT_GOV_BASE = "https://clinicaltrials.gov/api/v2/studies"
-PAGE_CAP = 20  # max 20,000 studies per request
+PAGE_CAP = 32  # max 32,000 studies per request
 
 
 def fetch_all_pages(params: dict) -> list[dict]:

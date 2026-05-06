@@ -1,0 +1,19 @@
+# CT.gov query presets for ingest.py
+# Run with: python ingest.py <preset_name>
+# Keys map directly to CT.gov API v2 parameters.
+# See https://clinicaltrials.gov/data-api/api for the full reference.
+
+oncology:
+  query.cond: cancer
+
+nsclc:
+  # Phase 2 and 3 non-small cell lung cancer trials
+  query.cond: >-
+    stage 3 NSCLC OR stage III non-small cell lung cancer
+    OR stage 3 non small cell lung cancer
+  filter.advanced: PHASE2 OR PHASE3
+
+recruiting_diabetes:
+  query.cond: diabetes
+  filter.overallStatus: RECRUITING
+  filter.advanced: PHASE2

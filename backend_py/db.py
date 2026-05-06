@@ -17,9 +17,15 @@ CREATE TABLE IF NOT EXISTS studies (
     sponsor             TEXT,
     sponsor_class       TEXT,
     conditions          TEXT,   -- JSON array
-    interventions       TEXT,   -- JSON array of {type, name}
+    condition_keywords  TEXT,   -- JSON array
+    interventions       TEXT,   -- JSON array
+    arm_groups          TEXT,   -- JSON array
     enrollment          INTEGER,
     enrollment_type     TEXT,
+    masking             TEXT,
+    allocation          TEXT,
+    intervention_model  TEXT,
+    primary_purpose     TEXT,
     locations           TEXT,   -- JSON array of {facility, city, state, country, lat, lon}
     ingested_at         TEXT
 );
@@ -47,15 +53,19 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
             nct_id, title, status, phase, study_type,
             start_date, completion_date,
             sponsor, sponsor_class,
-            conditions, interventions,
+            conditions, condition_keywords,
+            interventions, arm_groups,
             enrollment, enrollment_type,
+            masking, allocation, intervention_model, primary_purpose,
             locations, ingested_at
         ) VALUES (
             :nct_id, :title, :status, :phase, :study_type,
             :start_date, :completion_date,
             :sponsor, :sponsor_class,
-            :conditions, :interventions,
+            :conditions, :condition_keywords,
+            :interventions, :arm_groups,
             :enrollment, :enrollment_type,
+            :masking, :allocation, :intervention_model, :primary_purpose,
             :locations, :ingested_at
         )
         """,
