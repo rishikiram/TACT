@@ -10,7 +10,11 @@ CREATE TABLE IF NOT EXISTS studies (
     nct_id              TEXT PRIMARY KEY,
     title               TEXT,
     status              TEXT,
-    phase               TEXT,
+    phase1              BOOLEAN,
+    phase2              BOOLEAN,
+    phase3              BOOLEAN,
+    phase4              BOOLEAN,
+    phase_text          TEXT,
     study_type          TEXT,
     start_date          TEXT,
     completion_date     TEXT,
@@ -50,7 +54,7 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
     conn.execute(
         """
         INSERT OR REPLACE INTO studies (
-            nct_id, title, status, phase, study_type,
+            nct_id, title, status, phase1, phase2, phase3, phase4, phase_text, study_type,
             start_date, completion_date,
             sponsor, sponsor_class,
             conditions, condition_keywords,
@@ -59,7 +63,7 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
             masking, allocation, intervention_model, primary_purpose,
             locations, ingested_at
         ) VALUES (
-            :nct_id, :title, :status, :phase, :study_type,
+            :nct_id, :title, :status, :phase1, :phase2, :phase3, :phase4, :phase_text, :study_type,
             :start_date, :completion_date,
             :sponsor, :sponsor_class,
             :conditions, :condition_keywords,

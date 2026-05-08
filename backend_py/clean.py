@@ -15,7 +15,8 @@ def clean_study(raw: dict) -> dict | None:
     sponsor_mod = ps.get("sponsorCollaboratorsModule", {})
     conditions_mod = ps.get("conditionsModule", {})
     arms_mod = ps.get("armsInterventionsModule", {})
-    
+    eligibility_mod = ps.get("eligibilityModule", {})
+
     locations_mod = ps.get("contactsLocationsModule", {})
     locations = [
         {
@@ -28,11 +29,19 @@ def clean_study(raw: dict) -> dict | None:
         }
         for loc in locations_mod.get("locations", [])
     ]
+    multicountry = len({loc.get("country") for loc in locations}) > 1
+
     #designModule
     enrollment_info = design_mod.get("enrollmentInfo", {})
     design_info = design_mod.get("designInfo", {})
+    
     phases = design_mod.get("phases") or []
-    phase = "/".join(p for p in phases) or None
+    phase1 = "PHASE1" in phases
+    phase2 = "PHASE2" in phases
+    phase3 = "PHASE3" in phases
+    phase4 = "PHASE4" in phases
+    phase_text = "/".join(p for p in phases) or None
+    # phase_text = "NA" if phase_text in {"N/A", "NOT APPLICABLE", ""} else phase_text
 
     return {
         "nct_id": nct_id,
@@ -51,7 +60,11 @@ def clean_study(raw: dict) -> dict | None:
         "interventions": json.dumps(arms_mod.get("interventions", [])),
         "arm_groups": json.dumps(arms_mod.get("armGroups", [])),
         #designModule
-        "phase": phase,
+        "phase1": phase1,
+        "phase2": phase2,
+        "phase3": phase3,
+        "phase4": phase4,
+        "phase_text": phase_text,
         "study_type": design_mod.get("studyType"),
         "enrollment": enrollment_info.get("count"),
         "enrollment_type": enrollment_info.get("type"),
@@ -59,8 +72,14 @@ def clean_study(raw: dict) -> dict | None:
         "allocation": design_info.get("allocation"),
         "intervention_model": design_info.get("interventionModel"),
         "primary_purpose": design_info.get("primaryPurpose"),
-
+        #eligibilityModule
+        "eligibility_criteria": eligibility_mod.get("eligibilityCriteria"),
+        "healthy_volunteers": eligibility_mod.get("healthyVolunteers"),
+        "std_ages": eligibility_mod.get("stdAges"),
+        #contactsLocationsModule
         "locations": json.dumps(locations),
+        "multicountry": multicountry,
+
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
 
