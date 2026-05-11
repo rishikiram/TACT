@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS studies (
     intervention_model  TEXT,
     primary_purpose     TEXT,
     locations           TEXT,   -- JSON array of {facility, city, state, country, lat, lon}
+    primary_outcomes    TEXT,   -- JSON array
+    secondary_outcomes  TEXT,   -- JSON array
     ingested_at         TEXT
 );
 """
@@ -61,7 +63,7 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
             interventions, arm_groups,
             enrollment, enrollment_type,
             masking, allocation, intervention_model, primary_purpose,
-            locations, ingested_at
+            locations, primary_outcomes, secondary_outcomes, ingested_at
         ) VALUES (
             :nct_id, :title, :status, :phase1, :phase2, :phase3, :phase4, :phase_text, :study_type,
             :start_date, :completion_date,
@@ -70,7 +72,7 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
             :interventions, :arm_groups,
             :enrollment, :enrollment_type,
             :masking, :allocation, :intervention_model, :primary_purpose,
-            :locations, :ingested_at
+            :locations, :primary_outcomes, :secondary_outcomes, :ingested_at
         )
         """,
         study,

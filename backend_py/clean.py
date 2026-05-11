@@ -16,6 +16,7 @@ def clean_study(raw: dict) -> dict | None:
     conditions_mod = ps.get("conditionsModule", {})
     arms_mod = ps.get("armsInterventionsModule", {})
     eligibility_mod = ps.get("eligibilityModule", {})
+    outcomes_mod = ps.get("outcomesModule", {})
 
     locations_mod = ps.get("contactsLocationsModule", {})
     locations = [
@@ -79,6 +80,9 @@ def clean_study(raw: dict) -> dict | None:
         #contactsLocationsModule
         "locations": json.dumps(locations),
         "multicountry": multicountry,
+        #outcomesModule
+        "primary_outcomes": json.dumps(outcomes_mod.get("primaryOutcomes", [])),
+        "secondary_outcomes": json.dumps(outcomes_mod.get("secondaryOutcomes", [])),
 
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
