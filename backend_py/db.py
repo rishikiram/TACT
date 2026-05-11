@@ -49,6 +49,18 @@ def connect() -> sqlite3.Connection:
 def init_db() -> None:
     with connect() as conn:
         conn.executescript(SCHEMA)
+        cols = [row[0] for row in conn.execute("SELECT name FROM pragma_table_info('studies')").fetchall()]
+        # print(f"[db] columns: {cols}")
+        # add new columns if schema has changed, based on SCHEMA text
+        lines = SCHEMA.strip().splitlines()
+        lines = lines[1:-1]  # skip CREATE TABLE and closing );
+        for line in lines:
+            if line.strip() and not line.strip().startswith("--"):
+                col_def = line.strip().split(",")[0]  # get column definition before comma
+                col_name = col_def.split()[0]
+                if col_name not in cols:
+                    print(f"[db] adding missing column: {col_name}")
+                    conn.execute(f"ALTER TABLE studies ADD COLUMN {col_def};")
     print(f"[db] initialized at {DB_PATH}")
 
 
