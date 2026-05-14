@@ -36,8 +36,8 @@ def parse_args(presets: dict):
         print("Available presets:")
         for name, params in presets.items():
             print(f"  {name}")
-            for k, v in params.items():
-                print(f"    {k}: {v}")
+            # for k, v in params.items():
+            #     print(f"    {k}: {v}")
         raise SystemExit(0)
 
     if not args.preset:

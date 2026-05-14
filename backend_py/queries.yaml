@@ -13,6 +13,24 @@ nsclc:
     OR stage 3 non small cell lung cancer
   # filter.advanced: PHASE2 OR PHASE3
 
+nsclc_adenocarcinoma:
+  query.cond: >-
+    non-small cell lung cancer OR NSCLC
+  query.term: >-
+    adenocarcinoma
+  query.intr: >-
+    targeted therapy OR precision medicine
+  # filter.advanced: PHASE2
+
+# nsclc_adenocarcinoma_v2:
+#   query.cond: >-
+#     non-small cell lung cancer OR NSCLC
+#   query.term: >-
+#     adenocarcinoma
+#   query.intr: >-
+#     targeted therapy OR precision medicine OR inhibitor
+#   # filter.advanced: PHASE2
+
 recruiting_diabetes:
   query.cond: diabetes
   filter.overallStatus: RECRUITING

@@ -7,33 +7,38 @@ DB_PATH = Path(__file__).parent.parent / "data" / "clinical_trials.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS studies (
-    nct_id              TEXT PRIMARY KEY,
-    title               TEXT,
-    status              TEXT,
-    phase1              BOOLEAN,
-    phase2              BOOLEAN,
-    phase3              BOOLEAN,
-    phase4              BOOLEAN,
-    phase_text          TEXT,
-    study_type          TEXT,
-    start_date          TEXT,
-    completion_date     TEXT,
-    sponsor             TEXT,
-    sponsor_class       TEXT,
-    conditions          TEXT,   -- JSON array
-    condition_keywords  TEXT,   -- JSON array
-    interventions       TEXT,   -- JSON array
-    arm_groups          TEXT,   -- JSON array
-    enrollment          INTEGER,
-    enrollment_type     TEXT,
-    masking             TEXT,
-    allocation          TEXT,
-    intervention_model  TEXT,
-    primary_purpose     TEXT,
-    locations           TEXT,   -- JSON array of {facility, city, state, country, lat, lon}
-    primary_outcomes    TEXT,   -- JSON array
-    secondary_outcomes  TEXT,   -- JSON array
-    ingested_at         TEXT
+    nct_id                  TEXT PRIMARY KEY,
+    title                   TEXT,
+    status                  TEXT,
+    phase1                  BOOLEAN,
+    phase2                  BOOLEAN,
+    phase3                  BOOLEAN,
+    phase4                  BOOLEAN,
+    phase_text              TEXT,
+    study_type              TEXT,
+    start_date              TEXT,
+    start_date_type         TEXT,
+    primary_completion_date TEXT,
+    primary_completion_date_type TEXT,
+    completion_date         TEXT,
+    completion_date_type    TEXT,
+    last_update_post        TEXT,
+    sponsor                 TEXT,
+    sponsor_class           TEXT,
+    conditions              TEXT,   -- JSON array
+    condition_keywords      TEXT,   -- JSON array
+    interventions           TEXT,   -- JSON array
+    arm_groups              TEXT,   -- JSON array
+    enrollment              INTEGER,
+    enrollment_type         TEXT,
+    masking                 TEXT,
+    allocation              TEXT,
+    intervention_model      TEXT,
+    primary_purpose         TEXT,
+    locations               TEXT,   -- JSON array of {facility, city, state, country, lat, lon}
+    primary_outcomes        TEXT,   -- JSON array
+    secondary_outcomes      TEXT,   -- JSON array
+    ingested_at             TEXT
 );
 """
 
@@ -69,7 +74,8 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
         """
         INSERT OR REPLACE INTO studies (
             nct_id, title, status, phase1, phase2, phase3, phase4, phase_text, study_type,
-            start_date, completion_date,
+            start_date, start_date_type, primary_completion_date, primary_completion_date_type,
+            completion_date, completion_date_type, last_update_post,
             sponsor, sponsor_class,
             conditions, condition_keywords,
             interventions, arm_groups,
@@ -78,7 +84,8 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
             locations, primary_outcomes, secondary_outcomes, ingested_at
         ) VALUES (
             :nct_id, :title, :status, :phase1, :phase2, :phase3, :phase4, :phase_text, :study_type,
-            :start_date, :completion_date,
+            :start_date, :start_date_type, :primary_completion_date, :primary_completion_date_type,
+            :completion_date, :completion_date_type, :last_update_post,
             :sponsor, :sponsor_class,
             :conditions, :condition_keywords,
             :interventions, :arm_groups,

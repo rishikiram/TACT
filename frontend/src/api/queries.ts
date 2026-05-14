@@ -32,12 +32,26 @@ export const NSCLC: FetchTrialsParams = {
 };
 
 export const NSCLC_v2: FetchTrialsParams = {
-  condition: "stage 3 NSCLC OR stage III non-small cell lung cancer OR stage 3 non small cell lung cancer",
-  pageSize: 1000,
-  filterAdvanced: "PHASE2 OR PHASE3",
+  condition: "NSCLC OR non-small cell lung cancer OR non small cell lung cancer",
+  term: "adenocarcinoma",
+  intr: "targeted therapy OR precision medicine OR inhibitor",
+  // pageSize: 1000,
+  // filterAdvanced: "PHASE2 OR PHASE3",
   // fields: ["protocolSection.contactsLocationsModule"] // Lets pull everything for now until we run into data issues
   // things to add later:
   // US and EU
   // Exclude studies not yet enrolling
   // Exclude phase 1 studies
 };
+export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
+  condition: "non-small cell lung cancer OR NSCLC OR non small cell lung cancer",
+  term: "adenocarcinoma",
+  intr: "targeted therapy OR precision medicine",
+};
+// nsclc_adenocarcinoma_phase2:
+//   query.cond: >-
+//     non-small cell lung cancer OR NSCLC
+//   query.term: >-
+//     adenocarcinoma
+//   query.intr: >-
+//     targeted therapy OR precision medicine

@@ -50,7 +50,12 @@ def clean_study(raw: dict) -> dict | None:
         #statusModule
         "status": status_mod.get("overallStatus"),
         "start_date": (status_mod.get("startDateStruct") or {}).get("date"),
+        "start_date_type": status_mod.get("startDateStruct", {}).get("type"),
+        "primary_completion_date": (status_mod.get("primaryCompletionDateStruct") or {}).get("date"),
+        "primary_completion_date_type": status_mod.get("primaryCompletionDateStruct", {}).get("type"),
         "completion_date": (status_mod.get("completionDateStruct") or {}).get("date"),
+        "completion_date_type": status_mod.get("completionDateStruct", {}).get("type"),
+        "last_update_post": status_mod.get("lastUpdatePostDateStruct", {}).get("date"),
         #sponsorCollaboratorsModule
         "sponsor": sponsor_mod.get("leadSponsor", {}).get("name"),
         "sponsor_class": sponsor_mod.get("leadSponsor", {}).get("class"),

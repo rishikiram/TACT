@@ -22,6 +22,7 @@ export interface FetchTrialsParams {
   condition?: string;
   term?: string;
   status?: string;
+  intr?: string;
   // phase?: string;
   filterAdvanced?: string; 
   pageSize?: number;
@@ -52,6 +53,7 @@ function buildQuery(params: FetchTrialsParams): URLSearchParams {
   if (params.condition) query.set("query.cond", params.condition);
   if (params.term) query.set("query.term", params.term);
   if (params.status) query.set("filter.overallStatus", params.status);
+  if (params.intr) query.set("query.intr", params.intr);
   if (params.filterAdvanced) query.set("filter.advanced", params.filterAdvanced);
   return query;
 }
