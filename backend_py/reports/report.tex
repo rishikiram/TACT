@@ -1,0 +1,217 @@
+\documentclass[11pt, letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{array}
+\usepackage{microtype}
+
+% ── Hyperlink styling ────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue!60!black,
+}
+
+% ── Header / footer ──────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{\small NSCLC Adenocarcinoma — Feasibility Analysis}
+\rhead{\small\today}
+\cfoot{\thepage}
+
+% ── Section formatting ───────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing{\subsection}{0pt}{12pt}{4pt}
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{document}
+
+% ── Title block ──────────────────────────────────────────────────────────────
+\begin{center}
+  {\LARGE\bfseries Clinical Trial Feasibility Report}\\[6pt]
+  {\large NSCLC Adenocarcinoma — Targeted Therapy Landscape}\\[4pt]
+  {\small\color{gray} ClinicalTrials.gov Data Extract \textbar{} \today}
+\end{center}
+
+\vspace{16pt}
+\hrule
+\vspace{16pt}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Cohort Definition}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Disease Focus}
+
+This report examines interventional clinical trials enrolling patients with
+\textbf{non-small cell lung cancer (NSCLC), adenocarcinoma histology}, where
+the intervention involves targeted therapy or precision medicine approaches.
+The focus is intended to capture studies that examine patient cohorts with 
+strict eligibility criteria that are measured with biomarkers. I also chose this 
+(disease + treatment) area because precision medicine has exciting potential 
+to reduce the physical burden of cancer treatment.
+\subsection{Inclusion Criteria}
+
+\begin{itemize}
+  \item Condition includes \textit{non-small cell lung cancer}, \textit{NSCLC},
+        or \textit{non small cell lung cancer}
+  \item Free-text terms include \textit{adenocarcinoma}
+  \item Intervention includes \textit{targeted therapy} or
+        \textit{precision medicine}
+  \item No restriction on overall status (active, completed, and terminated
+        trials are included to capture the full historical landscape)
+  \item Filtered to Phase 2 (including combined phase 1/2 and 2/3) for no 
+        particular reason. Figuring out if an intervention works (naively) seems 
+        like the most important step to me, though I assume this is not the case.
+\end{itemize}
+
+% \subsection{Exclusion Criteria}
+
+% No formal exclusion criteria were applied at the query stage. Post-retrieval,
+% studies lacking an NCT ID or brief title were dropped automatically during
+% data cleaning.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Data Source \& Query}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Data were retrieved from the \href{https://clinicaltrials.gov/data-api/api}%
+{ClinicalTrials.gov REST API v2} using the following query parameters
+% (\texttt{queries.yaml} preset: \texttt{nsclc\_adenocarcinoma}):
+
+\vspace{8pt}
+\begin{center}
+\begin{tabular}{>{\ttfamily}l l}
+  \toprule
+  \textbf{Parameter} & \textbf{Value} \\
+  \midrule
+  query.cond & non-small cell lung cancer OR NSCLC \\
+  query.term & adenocarcinoma \\
+  query.intr & targeted therapy OR precision medicine \\
+  \bottomrule
+\end{tabular}
+\end{center}
+\vspace{8pt}
+
+This returns 42 interventional studies conducted across 21 contries, dating from 2015 to 2026.
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Exploratory Data Analysis}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../../figures/fig_byYearPhase.png}
+  \caption{[Caption for figure 1.]}
+  \label{fig:fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../../figures/fig_enrollmentRate.png}
+  \caption{[Caption for figure 1.]}
+  \label{fig:fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../../figures/fig_primaryOutcomes.png}
+  \caption{[Caption for figure 3.]}
+  \label{fig:fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../../figures/fig_status.png}
+  \caption{[Caption for figure 4.]}
+  \label{fig:fig4}
+\end{figure}
+
+\subsection{Figure 1 — Trial Count per Year by Phase}
+Trials are being recorded at a consistent rate since 2020 with roughly equal numbers of phase 2,
+and combined phase 1/2 trials, and only 2 phase 2/3 trials.
+
+\subsection{Figure 2 — Trial Enrollment Rate, per Year}
+This chart displays the number of study participants averaged over the number of 
+years run, providing an estimate of enrollment feasibility for precision medicine 
+in NSCLC. This data was caluculated from the reported trial start and end dates.
+Its worth noting that some studies have only provided estimates of their duration 
+and estimates of their enrollment. Only 12 studies have confirmed thier reported 
+enrollment, and these studies have an average of 21.7 participants per year.
+
+
+\subsection{Figure 3 — Primary Outcomes}
+This chart displays the number of reported primary outcomes, or primary endpoints. 
+I read through many of them and the most common ones were progression free survival, 
+objective response rate, and adverse events. Of the studies with >2 endpoint, most 
+were combined phase 1/2 studies. 
+
+
+\subsection{Figure 4 - Trials Status}
+Trials for precision medicine in NSCLC seem to consistently be completed, and many 
+are currently active. Of these recorded trials, 5 were terminated and 1 was withdrawn.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Feasibility Assessment}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Feasibility Score}
+To give a score, I would want to compare the heuristics presented in this report to other 
+disease + treatment areas. I also don't know how to weight the various measures 
+\begin{center}
+\begin{tabular}{l c p{7cm}}
+  \toprule
+  \textbf{Dimension} & \textbf{Score (1--5)} & \textbf{Rationale} \\
+  \midrule
+  Trial volume                        & \hspace{6pt}--  & Seems medium to high, implying competition but also treatment potential \\
+  Enrollment Rate            & \hspace{6pt}--  & Shows some consistency and seems high to me \\
+  Geographic reach                    & \hspace{6pt}--  & Quite diverse geographic  \\
+  Phase distribution                  & \hspace{6pt}--  & [Proportion of Phase 2/3 vs.\ Phase 1; maturity of field] \\
+  Termination/Withdrawl rate      & \hspace{6pt}--  & [Industry vs.\ academic mix] \\
+  \midrule
+  \textbf{Overall}       & \hspace{6pt}--  & \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Memo}
+
+\textbf{To:} [Recipient] \\
+\textbf{From:} [Author] \\
+\textbf{Re:} Feasibility of NSCLC Adenocarcinoma Targeted Therapy Trial \\
+\textbf{Date:} \today
+
+\vspace{8pt}
+
+[Opening paragraph: state the purpose of the memo and the overall conclusion
+in 2--3 sentences.]
+
+\vspace{8pt}
+
+\textbf{Key Findings}
+
+\begin{enumerate}
+  \item {[Finding 1 — reference Figure~\ref{fig:fig1} or \ref{fig:fig2} as appropriate.]}
+  \item {[Finding 2]}
+  \item {[Finding 3]}
+  \item {[Finding 4 — reference Figure~\ref{fig:fig3} or \ref{fig:fig4} as appropriate.]}
+\end{enumerate}
+
+\vspace{8pt}
+
+\textbf{Recommendation}
+
+[1--2 paragraphs with your recommendation and the reasoning behind it.
+Be specific: propose next steps, flag risks, or identify gaps that would
+change the conclusion.]
+
+\end{document}

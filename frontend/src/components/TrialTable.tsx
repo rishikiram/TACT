@@ -81,6 +81,7 @@ export function TrialTable({ trials }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [jsonId, setJsonId] = useState<string | null>(null);
   const [phaseFilter, setPhaseFilter] = useState<Set<PhaseNum>>(new Set());
+  const [nctSearch, setNctSearch] = useState("");
 
   const togglePhase = (p: PhaseNum) =>
     setPhaseFilter((prev) => {
@@ -89,10 +90,9 @@ export function TrialTable({ trials }: Props) {
       return next;
     });
 
-  const visible =
-    phaseFilter.size === 0
-      ? trials
-      : trials.filter((t) => [...phaseFilter].some((p) => t[PHASE_KEYS[p]]));
+  const visible = trials
+    .filter((t) => phaseFilter.size === 0 || [...phaseFilter].some((p) => t[PHASE_KEYS[p]]))
+    .filter((t) => !nctSearch || t.nctId.toLowerCase().includes(nctSearch.toLowerCase()));
 
   if (trials.length === 0) {
     return <p style={{ padding: "16px", color: "var(--text)" }}>No trials to display.</p>;
@@ -113,8 +113,24 @@ export function TrialTable({ trials }: Props) {
             {p}
           </label>
         ))}
-        {phaseFilter.size > 0 && (
-          <span style={{ fontSize: "12px", color: "var(--text)", marginLeft: "auto" }}>
+        <input
+          type="text"
+          placeholder="Search NCT ID…"
+          value={nctSearch}
+          onChange={(e) => setNctSearch(e.target.value)}
+          style={{
+            marginLeft: "auto",
+            padding: "4px 8px",
+            fontSize: "12px",
+            borderRadius: "4px",
+            border: "1px solid var(--border)",
+            background: "none",
+            color: "var(--text-h)",
+            width: "160px",
+          }}
+        />
+        {(phaseFilter.size > 0 || nctSearch) && (
+          <span style={{ fontSize: "12px", color: "var(--text)" }}>
             {visible.length} / {trials.length}
           </span>
         )}

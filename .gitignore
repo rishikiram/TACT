@@ -24,3 +24,11 @@ __pycache__/
 data/*.db
 
 figures/
+
+backend_py/reports/*.aux
+backend_py/reports/*.fdb_latexmk
+backend_py/reports/*.fls
+backend_py/reports/*.log
+backend_py/reports/*.out
+backend_py/reports/*.synctex.gz
+backend_py/reports/*.pdf
