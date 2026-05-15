@@ -57,7 +57,7 @@ This report examines interventional clinical trials enrolling patients with
 \textbf{non-small cell lung cancer (NSCLC), adenocarcinoma histology}, where
 the intervention involves targeted therapy or precision medicine approaches.
 The focus is intended to capture studies that examine patient cohorts with 
-strict eligibility criteria that are measured with biomarkers. I also chose this 
+strict eligibility criteria that are measured with biomarkers. I chose this 
 (disease + treatment) area because precision medicine has exciting potential 
 to reduce the physical burden of cancer treatment.
 \subsection{Inclusion Criteria}
@@ -103,7 +103,7 @@ Data were retrieved from the \href{https://clinicaltrials.gov/data-api/api}%
 \end{center}
 \vspace{8pt}
 
-This returns 42 interventional studies conducted across 21 contries, dating from 2015 to 2026.
+This returns 42 interventional studies conducted across 21 countries, dating from 2015 to 2026.
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Exploratory Data Analysis}
 % ─────────────────────────────────────────────────────────────────────────────
@@ -137,15 +137,15 @@ This returns 42 interventional studies conducted across 21 contries, dating from
 \end{figure}
 
 \subsection{Figure 1 — Trial Count per Year by Phase}
-Trials are being recorded at a consistent rate since 2020 with roughly equal numbers of phase 2,
-and combined phase 1/2 trials, and only 2 phase 2/3 trials.
+Trials are being recorded at a consistent rate since 2020 with roughly equal numbers of Phase 2
+and combined Phase 1/2 trials, and only 2 Phase 2/3 trials.
 
 \subsection{Figure 2 — Trial Enrollment Rate, per Year}
-This chart displays the number of study participants averaged over the number of 
-years run, providing an estimate of enrollment feasibility for precision medicine 
-in NSCLC. This data was caluculated from the reported trial start and end dates.
-Its worth noting that some studies have only provided estimates of their duration 
-and estimates of their enrollment. Only 12 studies have confirmed thier reported 
+This chart displays the number of study participants averaged per year,
+providing an estimate of enrollment feasibility for precision medicine 
+in NSCLC. This data was calculated from the reported trial start and end dates.
+It's worth noting that some studies have only provided estimates of their duration 
+and estimates of their enrollment. Only 12 studies have confirmed their reported 
 enrollment, and these studies have an average of 21.7 participants per year.
 
 
@@ -156,7 +156,7 @@ objective response rate, and adverse events. Of the studies with $>$2 endpoints,
 were combined phase 1/2 studies. 
 
 
-\subsection{Figure 4 - Trials Status}
+\subsection{Figure 4 — Trial Status}
 Trials for precision medicine in NSCLC seem to consistently be completed, and many 
 are currently active. Of these recorded trials, 5 were terminated and 1 was withdrawn.
 
@@ -173,7 +173,7 @@ are currently active. Of these recorded trials, 5 were terminated and 1 was with
   Trial volume                        & \hspace{6pt}4   & Seems medium to high, implying competition but also treatment potential \\
   Enrollment Rate            & \hspace{6pt}3  & Shows some consistency but not a huge amount of patients for most studies \\
   Geographic reach                    & \hspace{6pt}4   & Quite diverse geographically \\
-  Phase distribution                  & \hspace{6pt}2  & Only 2 phase 3 studies were filtered out, possibly implying difficulty passing the pahse 2 stage.\\
+  Phase distribution                  & \hspace{6pt}2  & Only 2 Phase 3 studies were filtered out, possibly implying difficulty passing the Phase 2 stage.\\
   Termination/Withdrawl rate      & \hspace{6pt}4 & Low termination/withdrawl rate seems good, though I don't know if this is meaningful due to reporting bias\\
   \midrule
   \textbf{Overall}       & \hspace{6pt}4  & \\
@@ -189,12 +189,13 @@ and spanning 2015--2026 across 21 countries.
 
 % Query
 
-\textbf{Query} - The data pull from clinicaltrials.gov was tested by me to some extent, but overall I relied 
-on the \underline{essie} phrase-based search engine. Validating this serach engine ourselvs 
-could be interesting
+\textbf{Query} - The data pull from ClinicalTrials.gov was tested to some extent, but overall I relied 
+on the \textit{Essie} phrase-based search engine. Validating this search engine ourselves 
+could be interesting.
+
 % EDA
 % amount and time
-\textbf{Trial Count and Phase Distrubution} - The clinicaltrials.gov database shows a consitent number 
+\textbf{Trial Count and Phase Distribution} - The ClinicalTrials.gov database shows a consistent number of 
 trials being run in the past few years 
 for precision medicine in NSCLC with subtype Adenocarcinoma. There is an almost even split between 
 phase 2 and combined phase 1/2 trials, and no phase 3 nor combined phase 2/3 trials. Before drawing 
@@ -213,7 +214,6 @@ enrollment predictions for the future.
 
 % scoring notes
 \textbf{Scoring} - The scoring was based on my heuristic assessment, and context from Jagat's documents. To give a better score, 
-I would want to compare against other disease + treatment areas. I also don't know how to weight the 
-various measures and so I didn't attempt to create some scoring functions for this report.
-
+I would want to compare against other disease + treatment areas. I'd also want develop a function which weights the 
+various feasibilty feature to produce the overall score. For this report, I just relied on my judgment.
 \end{document}
