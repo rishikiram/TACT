@@ -2,6 +2,16 @@
 
 A toolkit for exploring ClinicalTrials.gov data — a Python pipeline for ingesting, cleaning, and analyzing studies into a local SQLite database, paired with a web app for interactive mapping and visualization.
 
+```
+TACT/
+├── backend_py/          # Python data pipeline
+├── data/
+│   └── clinical_trials.db
+├── frontend/            # React + Vite web app
+│   └── src/
+└── backend/             # Node.js + Express API proxy
+```
+
 ## Python Data Pipeline
 
 ### How to run
@@ -55,7 +65,7 @@ Add an entry to `backend_py/queries.yaml` using CT.gov v2 API parameter keys, th
 The frontend never calls ClinicalTrials.gov directly. All requests go through the Express backend, which forwards them to the CT.gov v2 API and pipes the response back. The `/api/trials/all` endpoint fetches up to 20,000 results and caches responses to disk.
 
 ```
-frontend (React + Vite)
+frontend (React + Vite) 
     │  HTTP
     ▼
 backend (Node.js + Express + TypeScript)
