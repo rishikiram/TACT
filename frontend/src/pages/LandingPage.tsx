@@ -21,6 +21,13 @@ const cards: {
     badge: "SQLite",
     badgeColor: "#1565c0",
   },
+  {
+    title: "Data Dictionary",
+    description: "Live schema reference: column types, null rates, sample values, and annotations.",
+    route: "/dictionary",
+    badge: "Schema",
+    badgeColor: "#6a1b9a",
+  },
 ];
 
 export default function LandingPage() {

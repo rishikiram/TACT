@@ -27,3 +27,29 @@ export async function fetchDbTrials(params: DbFetchParams): Promise<FetchTrialsR
   const data = await res.json();
   return { trials: data.trials as Trial[] };
 }
+
+export interface DictionaryColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+  nullCount: number;
+  nullPct: number;
+  uniqueCount: number;
+  sampleValues: string[];
+  // manual annotations — empty string if not yet filled in the DataDictionary table
+  source: string;
+  derivation: string;
+  plainDescription: string;
+}
+
+export interface DictionaryResult {
+  table: string;
+  totalRows: number;
+  columns: DictionaryColumn[];
+}
+
+export async function fetchDictionary(): Promise<DictionaryResult> {
+  const res = await fetch("/db-api/db/dictionary");
+  if (!res.ok) throw new Error(`Failed to fetch dictionary: ${res.status}`);
+  return res.json();
+}

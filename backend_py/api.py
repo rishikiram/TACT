@@ -8,7 +8,8 @@ import yaml
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import connect, DB_PATH
+from db import connect, DB_PATH, get_table_columns
+from dictionary_repo import get_annotations
 
 app = FastAPI(title="TACT DB API", description="Serves clinical trial data from local SQLite")
 
@@ -203,6 +204,66 @@ def get_trials(
 
     trials = [_row_to_trial(row) for row in rows]
     return {"trials": trials, "totalCount": len(trials)}
+
+
+@app.get("/db/dictionary")
+def get_dictionary(table: str = Query("studies")):
+    if not DB_PATH.exists():
+        raise HTTPException(status_code=503, detail=f"Database not found at {DB_PATH}")
+
+    with connect() as conn:
+        # 1. Schema pass
+        cols = get_table_columns(conn, table)
+
+        # 2. Stats pass — null count + unique count for all columns in one query
+        agg_parts = []
+        for col in cols:
+            n = col["name"]
+            agg_parts.append(f"SUM(CASE WHEN \"{n}\" IS NULL THEN 1 ELSE 0 END) AS \"{n}__nulls\"")
+            agg_parts.append(f"COUNT(DISTINCT \"{n}\") AS \"{n}__unique\"")
+        stats_row = conn.execute(
+            f"SELECT COUNT(*) AS total, {', '.join(agg_parts)} FROM \"{table}\""
+        ).fetchone()
+        total_rows = stats_row["total"]
+
+        # 3. Sample values pass — 3 distinct non-null values per column
+        samples: dict[str, list[str]] = {}
+        json_cols = {c["name"] for c in cols if c["type"].upper() == "TEXT"
+                     and c["name"] in ("conditions", "condition_keywords", "interventions",
+                                       "arm_groups", "locations", "primary_outcomes", "secondary_outcomes")}
+        for col in cols:
+            n = col["name"]
+            if n in json_cols:
+                samples[n] = ["[array]"]
+            else:
+                rows = conn.execute(
+                    f"SELECT DISTINCT \"{n}\" FROM \"{table}\" WHERE \"{n}\" IS NOT NULL LIMIT 3"
+                ).fetchall()
+                samples[n] = [str(r[0]) for r in rows]
+
+        # 4. Annotations pass
+        annotations = get_annotations(conn, table)
+
+    columns = []
+    for col in cols:
+        n = col["name"]
+        null_count = stats_row[f"{n}__nulls"] or 0
+        null_pct = round(null_count / total_rows * 100, 1) if total_rows else 0.0
+        ann = annotations.get(n, {})
+        columns.append({
+            "name": n,
+            "type": col["type"],
+            "nullable": not col["notnull"],
+            "nullCount": null_count,
+            "nullPct": null_pct,
+            "uniqueCount": stats_row[f"{n}__unique"] or 0,
+            "sampleValues": samples.get(n, []),
+            "source": ann.get("source", ""),
+            "derivation": ann.get("derivation", ""),
+            "plainDescription": ann.get("plain_description", ""),
+        })
+
+    return {"table": table, "totalRows": total_rows, "columns": columns}
 
 
 @app.get("/db/trial/{nct_id}")

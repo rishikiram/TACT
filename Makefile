@@ -1,4 +1,4 @@
-.PHONY: dev frontend backend backend-py ingest
+.PHONY: dev frontend backend backend-py ingest dict-init
 
 # Start all three processes in parallel
 dev:
@@ -21,3 +21,7 @@ backend-py:
 # Ingest data: make ingest PRESET=oncology
 ingest:
 	cd backend_py && python ingest.py $(PRESET)
+
+# Bootstrap the DataDictionary table from the current studies schema
+dict-init:
+	cd backend_py && python -c "from db import build_data_dictionary; build_data_dictionary()"

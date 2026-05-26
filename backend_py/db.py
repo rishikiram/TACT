@@ -1,9 +1,21 @@
-import json
 import sqlite3
-from datetime import datetime, timezone
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent.parent / "data" / "clinical_trials.db"
+
+# Schema for the DataDictionary annotations table.
+# To migrate to PostgreSQL: change TEXT -> VARCHAR/TEXT (compatible),
+# PRIMARY KEY syntax is identical.
+DATA_DICTIONARY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS DataDictionary (
+    table_name        TEXT NOT NULL,
+    column_name       TEXT NOT NULL,
+    source            TEXT NOT NULL DEFAULT '',
+    derivation        TEXT NOT NULL DEFAULT '',
+    plain_description TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (table_name, column_name)
+);
+"""
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS studies (
@@ -112,3 +124,33 @@ def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
 
 def count() -> int:
     return query("SELECT COUNT(*) FROM studies")[0][0]
+
+
+def get_table_columns(conn, table_name: str) -> list[dict]:
+    """
+    Returns [{name, type, notnull}, ...] for each column in table_name.
+
+    DIALECT NOTE: uses SQLite PRAGMA table_info.
+    PostgreSQL replacement:
+        SELECT column_name AS name, data_type AS type,
+               (is_nullable = 'NO') AS notnull
+        FROM information_schema.columns
+        WHERE table_name = %s ORDER BY ordinal_position
+    Also update placeholder from ? to %s throughout this file and dictionary_repo.py.
+    """
+    rows = conn.execute(f"PRAGMA table_info('{table_name}')").fetchall()
+    return [{"name": r["name"], "type": r["type"], "notnull": bool(r["notnull"])} for r in rows]
+
+
+def build_data_dictionary(table_name: str = "studies") -> None:
+    """
+    Bootstrap entry point. Creates the DataDictionary table and registers
+    all columns from table_name. Safe to re-run — existing rows are untouched.
+    Delegates all SQL to dictionary_repo so this function needs no changes
+    when switching databases (only connect() and get_table_columns() above change).
+    """
+    from dictionary_repo import ensure_table, build_from_table
+    with connect() as conn:
+        ensure_table(conn)
+        n = build_from_table(conn, table_name)
+    print(f"[db] DataDictionary built for '{table_name}' — {n} columns registered")
