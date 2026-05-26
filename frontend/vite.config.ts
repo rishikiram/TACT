@@ -7,6 +7,10 @@ export default defineConfig({
     port: 3000,
     proxy: {
       "/api": "http://localhost:3001",
+      "/db-api": {
+        target: "http://localhost:8010",
+        rewrite: (path) => path.replace(/^\/db-api/, ""),
+      },
     },
   },
   test: {

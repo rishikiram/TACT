@@ -1,3 +1,0 @@
-# Add queries from frontend to python backend 
-how can I have a single source of truth?
-maybe use json files to store queries which the frontend/backend cna build. but shared queries are not really how the systsem is designed. I think if i decide whether the frontend AND the database should be sendingng queries to the backend, or just the database, that could answer these questions. Maybe for now I'll just not worry about the frontend, and focus on building a backend data product

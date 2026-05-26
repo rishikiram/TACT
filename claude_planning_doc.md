@@ -17,10 +17,10 @@ User
  ▼
 Landing Page (React Router)
  ├──► /live    → LiveExplorer (existing UI, calls TypeScript backend :3001)
- └──► /db      → DbExplorer   (same UI, calls FastAPI backend :8000)
+ └──► /db      → DbExplorer   (same UI, calls FastAPI backend :8010)
 
 TypeScript Backend (:3001)   ← proxies ClinicalTrials.gov API
-FastAPI Backend (:8000)      ← reads from SQLite (data/clinical_trials.db)
+FastAPI Backend (:8010)      ← reads from SQLite (data/clinical_trials.db)
 ```
 
 ---
@@ -106,7 +106,7 @@ uvicorn[standard]
 
 ### 2.3 FastAPI App (`backend_py/api.py`)
 
-**Base URL:** `http://localhost:8000`
+**Base URL:** `http://localhost:8010`
 
 **CORS:** Allow `http://localhost:3000` (frontend dev server)
 
@@ -208,7 +208,7 @@ Add a second proxy entry in `frontend/vite.config.ts`:
 proxy: {
   '/api': 'http://localhost:3001',
   '/db-api': {
-    target: 'http://localhost:8000',
+    target: 'http://localhost:8010',
     rewrite: (path) => path.replace(/^\/db-api/, '')
   }
 }
@@ -251,7 +251,7 @@ Update `package.json` or add a root-level `Makefile`/`scripts` to start both bac
 cd backend && npx ts-node server.ts
 
 # Start FastAPI backend
-cd backend_py && uvicorn api:app --reload --port 8000
+cd backend_py && uvicorn api:app --reload --port 8010
 
 # Start frontend
 cd frontend && npm run dev
