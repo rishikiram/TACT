@@ -58,31 +58,33 @@ CREATE TABLE IF NOT EXISTS studies (
 def connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
+    # row_factory enables dict-like row access. PostgreSQL equivalent: psycopg2.extras.RealDictCursor
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")  # safe for concurrent readers
+    # DIALECT NOTE: PRAGMA is SQLite-specific. Remove for PostgreSQL.
+    conn.cursor().execute("PRAGMA journal_mode=WAL")
     return conn
 
 
 def init_db() -> None:
     with connect() as conn:
-        conn.executescript(SCHEMA)
-        cols = [row[0] for row in conn.execute("SELECT name FROM pragma_table_info('studies')").fetchall()]
-        # print(f"[db] columns: {cols}")
-        # add new columns if schema has changed, based on SCHEMA text
+        cursor = conn.cursor()
+        cursor.execute(SCHEMA)
+        # DIALECT NOTE: pragma_table_info is SQLite-specific.
+        cols = [row[0] for row in cursor.execute("SELECT name FROM pragma_table_info('studies')").fetchall()]
         lines = SCHEMA.strip().splitlines()
         lines = lines[1:-1]  # skip CREATE TABLE and closing );
         for line in lines:
             if line.strip() and not line.strip().startswith("--"):
-                col_def = line.strip().split(",")[0]  # get column definition before comma
+                col_def = line.strip().split(",")[0]
                 col_name = col_def.split()[0]
                 if col_name not in cols:
                     print(f"[db] adding missing column: {col_name}")
-                    conn.execute(f"ALTER TABLE studies ADD COLUMN {col_def};")
+                    cursor.execute(f"ALTER TABLE studies ADD COLUMN {col_def};")
     print(f"[db] initialized at {DB_PATH}")
 
 
 def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
-    conn.execute(
+    conn.cursor().execute(
         """
         INSERT OR REPLACE INTO studies (
             nct_id, title, status, phase1, phase2, phase3, phase4, phase_text, study_type,
@@ -119,7 +121,9 @@ def upsert_studies(studies: list[dict]) -> int:
 
 def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
     with connect() as conn:
-        return conn.execute(sql, params).fetchall()
+        cursor = conn.cursor()
+        cursor.execute(sql, params)
+        return cursor.fetchall()
 
 
 def count() -> int:
@@ -131,14 +135,10 @@ def get_table_columns(conn, table_name: str) -> list[dict]:
     Returns [{name, type, notnull}, ...] for each column in table_name.
 
     DIALECT NOTE: uses SQLite PRAGMA table_info.
-    PostgreSQL replacement:
-        SELECT column_name AS name, data_type AS type,
-               (is_nullable = 'NO') AS notnull
-        FROM information_schema.columns
-        WHERE table_name = %s ORDER BY ordinal_position
-    Also update placeholder from ? to %s throughout this file and dictionary_repo.py.
     """
-    rows = conn.execute(f"PRAGMA table_info('{table_name}')").fetchall()
+    cursor = conn.cursor()
+    cursor.execute(f"PRAGMA table_info('{table_name}')")
+    rows = cursor.fetchall()
     return [{"name": r["name"], "type": r["type"], "notnull": bool(r["notnull"])} for r in rows]
 
 
