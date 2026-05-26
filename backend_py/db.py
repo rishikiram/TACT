@@ -144,9 +144,9 @@ def get_table_columns(conn, table_name: str) -> list[dict]:
 
 def build_data_dictionary(table_name: str = "studies") -> None:
     """
-    Bootstrap entry point. Creates the DataDictionary table and registers
-    all columns from table_name. Safe to re-run — existing rows are untouched.
-    Delegates all SQL to dictionary_repo so this function needs no changes
+    Bootstrap entry point. Creates the DataDictionary table if needed, then
+    replaces all rows for table_name with the current schema — existing annotations
+    are wiped. Delegates all SQL to dictionary_repo so this function needs no changes
     when switching databases (only connect() and get_table_columns() above change).
     """
     from dictionary_repo import ensure_table, build_from_table

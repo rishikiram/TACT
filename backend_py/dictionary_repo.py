@@ -16,19 +16,14 @@ def ensure_table(conn) -> None:
 
 def build_from_table(conn, table_name: str = "studies") -> int:
     """
-    Register one DataDictionary row per column in table_name.
-    Idempotent — existing rows are left untouched so annotations are never lost.
-    Returns the total number of columns in the table (not just newly inserted).
-
-    DIALECT NOTE: INSERT OR IGNORE is SQLite syntax.
-    PostgreSQL equivalent:
-        INSERT INTO DataDictionary (table_name, column_name)
-        VALUES (%s, %s)
-        ON CONFLICT (table_name, column_name) DO NOTHING
+    Replace all DataDictionary rows for table_name with a fresh set derived
+    from the current schema. Any existing annotations are wiped.
+    Returns the number of columns registered.
     """
     cols = get_table_columns(conn, table_name)
+    conn.execute("DELETE FROM DataDictionary WHERE table_name = ?", (table_name,))
     conn.executemany(
-        "INSERT OR IGNORE INTO DataDictionary (table_name, column_name) VALUES (?, ?)",
+        "INSERT INTO DataDictionary (table_name, column_name) VALUES (?, ?)",
         [(table_name, col["name"]) for col in cols],
     )
     return len(cols)
