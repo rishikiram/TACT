@@ -22,6 +22,7 @@ backend/cache/
 __pycache__/
 
 data/*.db
+data/*.db-*
 
 figures/
 
