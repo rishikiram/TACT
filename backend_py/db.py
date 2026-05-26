@@ -154,3 +154,4 @@ def build_data_dictionary(table_name: str = "studies") -> None:
         ensure_table(conn)
         n = build_from_table(conn, table_name)
     print(f"[db] DataDictionary built for '{table_name}' — {n} columns registered")
+

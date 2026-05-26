@@ -1,0 +1,167 @@
+# Annotations for every column in the studies table.
+# Loaded into the DataDictionary table via: make dict-load
+#
+# Fields:
+#   source            - where the raw data comes from (API path, external dataset, etc.)
+#   derivation        - how the value was computed or transformed from the source
+#   plain_description - jargon-free explanation for non-technical audiences
+
+nct_id:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.identificationModule.nctId"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The unique ID assigned to this trial by ClinicalTrials.gov, used to look it up on the website"
+
+title:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.identificationModule.briefTitle"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The short public name of the study"
+
+status:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.overallStatus"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the trial is currently enrolling patients, completed, or in another stage"
+
+phase1:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.phases"
+  derivation: "[WRITTEN BY AI] Set to true if the string 'PHASE1' appears in the phases array, otherwise false"
+  plain_description: "[WRITTEN BY AI] Whether this trial tests a treatment for the first time in humans, focusing on safety"
+
+phase2:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.phases"
+  derivation: "[WRITTEN BY AI] Set to true if the string 'PHASE2' appears in the phases array, otherwise false"
+  plain_description: "[WRITTEN BY AI] Whether this trial tests whether a treatment works in a small group of patients"
+
+phase3:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.phases"
+  derivation: "[WRITTEN BY AI] Set to true if the string 'PHASE3' appears in the phases array, otherwise false"
+  plain_description: "[WRITTEN BY AI] Whether this trial compares the treatment to the current standard of care in a large group of patients"
+
+phase4:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.phases"
+  derivation: "[WRITTEN BY AI] Set to true if the string 'PHASE4' appears in the phases array, otherwise false"
+  plain_description: "[WRITTEN BY AI] Whether this trial studies a treatment that has already been approved, to gather more long-term data"
+
+phase_text:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.phases"
+  derivation: "[WRITTEN BY AI] The phases array joined with '/', e.g. 'PHASE2/PHASE3'. Empty if no phases listed."
+  plain_description: "[WRITTEN BY AI] The trial phase(s) as a single readable label"
+
+study_type:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.studyType"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the trial tests an intervention (e.g. a drug) or observes patients without intervening"
+
+start_date:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.startDateStruct.date"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The date the trial began enrolling its first participants"
+
+start_date_type:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.startDateStruct.type"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the start date is confirmed (ACTUAL) or planned (ESTIMATED)"
+
+primary_completion_date:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.primaryCompletionDateStruct.date"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The date by which the trial expects to finish collecting its main results"
+
+primary_completion_date_type:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.primaryCompletionDateStruct.type"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the primary completion date is confirmed (ACTUAL) or planned (ESTIMATED)"
+
+completion_date:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.completionDateStruct.date"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The date the entire study is expected to finish, including any follow-up"
+
+completion_date_type:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.completionDateStruct.type"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the completion date is confirmed (ACTUAL) or planned (ESTIMATED)"
+
+last_update_post:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.statusModule.lastUpdatePostDateStruct.date"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The most recent date that the trial's information was updated on ClinicalTrials.gov"
+
+sponsor:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The organisation responsible for running the trial (e.g. a pharmaceutical company or university)"
+
+sponsor_class:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The type of organisation running the trial, such as industry, government (NIH), or academic"
+
+conditions:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.conditionsModule.conditions"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of strings"
+  plain_description: "[WRITTEN BY AI] The diseases or conditions the trial is studying"
+
+condition_keywords:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.conditionsModule.keywords"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of strings (MeSH terms and free-text keywords)"
+  plain_description: "[WRITTEN BY AI] Medical keywords associated with the conditions being studied"
+
+interventions:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.armsInterventionsModule.interventions"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of objects with fields: name, type, description, armGroupLabels"
+  plain_description: "[WRITTEN BY AI] The treatments or procedures being tested, such as a drug, device, or behavioural therapy"
+
+arm_groups:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.armsInterventionsModule.armGroups"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of objects with fields: label, type, description, interventionNames"
+  plain_description: "[WRITTEN BY AI] The groups participants are divided into, such as a treatment group and a placebo group"
+
+enrollment:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.enrollmentInfo.count"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The number of participants in the trial"
+
+enrollment_type:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.enrollmentInfo.type"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether the enrollment number is a target (ESTIMATED) or the actual final count (ACTUAL)"
+
+masking:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.designInfo.maskingInfo.masking"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether participants or researchers know which treatment is being given (e.g. double-blind means neither knows)"
+
+allocation:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.designInfo.allocation"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] Whether participants are randomly assigned to groups (RANDOMIZED) or not (NON_RANDOMIZED)"
+
+intervention_model:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.designInfo.interventionModel"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] How the treatment groups are structured, e.g. parallel (each person gets one treatment) or crossover (each person gets both)"
+
+primary_purpose:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.designModule.designInfo.primaryPurpose"
+  derivation: "[WRITTEN BY AI] Direct field extraction, no transformation"
+  plain_description: "[WRITTEN BY AI] The main goal of the trial, such as treating a disease, preventing it, or diagnosing it"
+
+locations:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.contactsLocationsModule.locations"
+  derivation: "[WRITTEN BY AI] Extracted facility, city, state, country per site; lat/lon coordinates provided by CT.gov. Stored as a JSON array."
+  plain_description: "[WRITTEN BY AI] The hospitals and research centres where the trial is being conducted, including their map coordinates"
+
+primary_outcomes:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.outcomesModule.primaryOutcomes"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of objects with fields: measure, description, timeFrame"
+  plain_description: "[WRITTEN BY AI] The main results the trial is designed to measure, such as tumour shrinkage or survival rate"
+
+secondary_outcomes:
+  source: "[WRITTEN BY AI] ClinicalTrials.gov API v2 — protocolSection.outcomesModule.secondaryOutcomes"
+  derivation: "[WRITTEN BY AI] Stored as a JSON array of objects with fields: measure, description, timeFrame"
+  plain_description: "[WRITTEN BY AI] Additional results the trial tracks beyond the main goal, such as side effects or quality of life"
+
+ingested_at:
+  source: "[WRITTEN BY AI] Generated locally during ingestion"
+  derivation: "[WRITTEN BY AI] UTC timestamp recorded by ingest.py at the time the row was written to the database"
+  plain_description: "[WRITTEN BY AI] When this trial's data was last downloaded and saved to the local database"

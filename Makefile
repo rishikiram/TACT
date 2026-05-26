@@ -1,4 +1,4 @@
-.PHONY: dev frontend backend backend-py ingest dict-init
+.PHONY: dev frontend backend backend-py ingest dataDict-init
 
 # Start all three processes in parallel
 dev:
@@ -23,5 +23,5 @@ ingest:
 	cd backend_py && python ingest.py $(PRESET)
 
 # Bootstrap the DataDictionary table from the current studies schema
-dict-init:
+dataDict-init:
 	cd backend_py && python -c "from db import build_data_dictionary; build_data_dictionary()"
