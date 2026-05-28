@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXIST gaps (
 """
 
 RELATIONSHIPS_SCHEMA = """
+-- Many-to-many sources to evidence  -- this might be unecessary, could be one-to-many (source-to-EOs)
 CREATE TABLE IF NOT EXIST evidence_object_sources (
     source_id               INTEGER,
     evidence_object_id      INTEGER,
@@ -106,6 +107,7 @@ ALTER TABLE evidence_object_sources(
     REFERENCES evidence_objects(evidence_object_id)
 );
 
+-- Many-to-many evidence to claims
 CREATE TABLE IF NOT EXISTS claim_evidence_objects (
     claim_id                INTEGER,
     evidence_object_id      INTEGER,
@@ -122,6 +124,7 @@ ALTER TABLE claim_evidence_objects(
     REFERENCES evidence_objects(evidence_object_id)
 );
 
+-- Many-to-many-to-many claims and requirements to gaps
 CREATE IF NOT EXIST requirement_claim_gaps (
     claim_id                INTEGER,
     requirement_id          INTEGER,
@@ -143,7 +146,6 @@ ALTER TABLE requirement_claim_gaps(
     FOREIGN KEY (gap_id)
     REFERENCES gaps(gap_id)
 );
-
 """
 
 
