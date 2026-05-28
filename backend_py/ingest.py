@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from clean import clean_studies
+from clean import clean_ctgov_studies
 from ctgov import fetch_all_pages
 from db import init_db, upsert_studies, count
 
@@ -59,7 +59,7 @@ def ingest(params: dict) -> None:
     raw_studies = fetch_all_pages(params)
     print(f"[ingest] fetched {len(raw_studies)} studies")
 
-    cleaned, dropped = clean_studies(raw_studies)
+    cleaned, dropped = clean_ctgov_studies(raw_studies)
     print(f"[ingest] cleaned: {len(cleaned)}, dropped (missing id/title): {dropped}")
 
     upsert_studies(cleaned)
