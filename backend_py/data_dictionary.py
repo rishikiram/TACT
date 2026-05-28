@@ -5,13 +5,24 @@ See DIALECT NOTEs for sqlite specific sql code.
 """
 
 from pathlib import Path
-from db import DATA_DICTIONARY_SCHEMA, get_table_columns
+from backend_py.db import get_table_columns
 
-ANNOTATIONS_YAML = Path(__file__).parent / "column_annotations.yaml"
+ANNOTATIONS_YAML = Path(__file__).parent / "studies_column_annotations.yaml"
 
+# Schema for the DataDictionary annotations table.
+DATA_DICTIONARY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS data_dictionary (
+    table_name        TEXT NOT NULL,
+    column_name       TEXT NOT NULL,
+    source            TEXT NOT NULL DEFAULT '',
+    derivation        TEXT NOT NULL DEFAULT '',
+    plain_description TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (table_name, column_name)
+);
+"""
 
-def ensure_table(conn) -> None:
-    """Create the DataDictionary table if it doesn't exist."""
+def build_dataDictionary(conn) -> None:
+    """Create the data_dictionary table if it doesn't exist."""
     cursor = conn.cursor()
     cursor.execute(DATA_DICTIONARY_SCHEMA)
 
@@ -33,13 +44,13 @@ def build_from_table(conn, table_name: str = "studies") -> int:
     )
     updated = load_annotations_from_yaml(conn, table_name, ANNOTATIONS_YAML)
     if not updated == len(cols):
-        print("Not all data fields have metadata written in column_annotations.yaml...")
+        print("Not all data fields have metadata written in studies_column_annotations.yaml...")
     return len(cols)
 
 
 def load_annotations_from_yaml(conn, table_name: str = "studies", yaml_path: Path = ANNOTATIONS_YAML) -> int:
     """
-    Read column_annotations.yaml and UPDATE matching rows in DataDictionary.
+    Read studies_column_annotations.yaml and UPDATE matching rows in DataDictionary.
     Rows must already exist (run build_from_table first).
     Returns the number of rows updated.
 

@@ -1,6 +1,6 @@
-import sqlite3
+# import sqlite3
 import pandas as pd
-from db import connect
+from backend_py.db import connect
 
 
 def load_studies(sql: str = "SELECT * FROM studies", params: tuple = ()) -> pd.DataFrame:

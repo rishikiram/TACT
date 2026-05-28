@@ -14,9 +14,9 @@ from pathlib import Path
 
 import yaml
 
-from clean import clean_ctgov_studies
-from ctgov import fetch_all_pages
-from db import init_db, upsert_studies, count
+from backend_py.clean import clean_ctgov_studies
+from backend_py.ctgov import fetch_all_pages
+from backend_py.db import init_db, upsert_studies, count
 
 QUERIES_FILE = Path(__file__).parent / "queries.yaml"
 

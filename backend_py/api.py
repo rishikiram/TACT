@@ -8,8 +8,8 @@ import yaml
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import connect, DB_PATH, get_table_columns
-from dictionary_repo import get_annotations
+from backend_py.db import connect, DB_PATH, get_table_columns
+from backend_py.data_dictionary import get_annotations
 
 app = FastAPI(title="TACT DB API", description="Serves clinical trial data from local SQLite")
 

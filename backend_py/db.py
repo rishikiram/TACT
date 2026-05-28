@@ -3,20 +3,9 @@ from pathlib import Path
 
 DB_PATH = Path(__file__).parent.parent / "data" / "clinical_trials.db"
 
-# Schema for the DataDictionary annotations table.
-DATA_DICTIONARY_SCHEMA = """
-CREATE TABLE IF NOT EXISTS DataDictionary (
-    table_name        TEXT NOT NULL,
-    column_name       TEXT NOT NULL,
-    source            TEXT NOT NULL DEFAULT '',
-    derivation        TEXT NOT NULL DEFAULT '',
-    plain_description TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (table_name, column_name)
-);
-"""
 
 TABLES_SCHEMA = """
-CREATE TABLE IF NOT EXISTS studies (
+CREATE TABLE studies (
     nct_id                  TEXT PRIMARY KEY,
     title                   TEXT,
     status                  TEXT,
@@ -51,14 +40,14 @@ CREATE TABLE IF NOT EXISTS studies (
     ingested_at             TEXT
 );
 
-CREATE TABLE IF NOT EXIST sources (
+CREATE TABLE sources (
     source_id               INTEGER PRIMARY KEY,
     type                    TEXT,
     title                   TEXT,
     url                     TEXT
 );
 
-CREATE TABLE IF NOT EXISTS evidence_objects (
+CREATE TABLE evidence_objects (
     evidence_object_id      INTEGER PRIMARY KEY,
     type                    TEXT, -- could be turned into a fk with a set of options
     statement               TEXT, 
@@ -66,21 +55,21 @@ CREATE TABLE IF NOT EXISTS evidence_objects (
     confidence              TEXT -- could also be turned into a fk with a set of options
 );
 
-CREATE TABLE IF NOT EXIST claims (
+CREATE TABLE claims (
     claim_id                INTEGER PRIMARY KEY,
     statement               TEXT,
     status                  TEXT, -- could be a fk enum, also could be renamed to 'veracity' or confidence
     risk_note               TEXT
 );
 
-CREATE TABLE IF NOT EXIST requirements (
+CREATE TABLE requirements (
     requirement_id          INTEGER PRIMARY KEY,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
     expectation             TEXT
 );
 
-CREATE TABLE IF NOT EXIST gaps (
+CREATE TABLE gaps (
     gap_id                  INTEGER PRIMARY KEY,
     type                    TEXT,
     severity                TEXT,
@@ -91,7 +80,7 @@ CREATE TABLE IF NOT EXIST gaps (
 
 RELATIONSHIPS_SCHEMA = """
 -- Many-to-many sources to evidence  -- this might be unecessary, could be one-to-many (source-to-EOs)
-CREATE TABLE IF NOT EXIST evidence_object_sources (
+CREATE TABLE evidence_object_sources (
     source_id               INTEGER,
     evidence_object_id      INTEGER,
     PRIMARY KEY (source_id, evidence_object_id),
@@ -108,7 +97,7 @@ ALTER TABLE evidence_object_sources(
 );
 
 -- Many-to-many evidence to claims
-CREATE TABLE IF NOT EXISTS claim_evidence_objects (
+CREATE TABLE claim_evidence_objects (
     claim_id                INTEGER,
     evidence_object_id      INTEGER,
     PRIMARY KEY (claim_id, evidence_object_id)
@@ -125,7 +114,7 @@ ALTER TABLE claim_evidence_objects(
 );
 
 -- Many-to-many-to-many claims and requirements to gaps
-CREATE IF NOT EXIST requirement_claim_gaps (
+CREATE requirement_claim_gaps (
     claim_id                INTEGER,
     requirement_id          INTEGER,
     gap_id                  INTEGER,
@@ -162,27 +151,9 @@ def connect() -> sqlite3.Connection:
 def init_db() -> None:
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(SCHEMA)
-        # DIALECT NOTE: pragma_table_info is SQLite-specific.
-        cols = [row[0] for row in cursor.execute("SELECT name FROM pragma_table_info('studies')").fetchall()]
-        lines = SCHEMA.strip().splitlines()
-        lines = lines[1:-1]  # skip CREATE TABLE and closing );
-        for line in lines:
-            if line.strip() and not line.strip().startswith("--"):
-                col_def = line.strip().split(",")[0]
-                col_name = col_def.split()[0]
-                if col_name not in cols:
-                    print(f"[db] adding missing column: {col_name}")
-                    cursor.execute(f"ALTER TABLE studies ADD COLUMN {col_def};")
+        cursor.execute(TABLES_SCHEMA)
+        cursor.execute(RELATIONSHIPS_SCHEMA)
     print(f"[db] initialized at {DB_PATH}")
-
-def init_tables() -> None:
-    pass
-
-def init_relationships() -> None:
-    pass
-
-
 
 def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
     conn.cursor().execute(
@@ -250,9 +221,9 @@ def build_data_dictionary(table_name: str = "studies") -> None:
     are wiped. Delegates all SQL to dictionary_repo so this function needs no changes
     when switching databases (only connect() and get_table_columns() above change).
     """
-    from dictionary_repo import ensure_table, build_from_table
+    from backend_py.data_dictionary import build_dataDictionary, build_from_table
     with connect() as conn:
-        ensure_table(conn)
+        build_dataDictionary(conn)
         n = build_from_table(conn, table_name)
     print(f"[db] DataDictionary built for '{table_name}' — {n} columns registered")
 
