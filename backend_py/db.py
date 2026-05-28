@@ -4,8 +4,6 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent / "data" / "clinical_trials.db"
 
 # Schema for the DataDictionary annotations table.
-# To migrate to PostgreSQL: change TEXT -> VARCHAR/TEXT (compatible),
-# PRIMARY KEY syntax is identical.
 DATA_DICTIONARY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS DataDictionary (
     table_name        TEXT NOT NULL,
@@ -17,7 +15,7 @@ CREATE TABLE IF NOT EXISTS DataDictionary (
 );
 """
 
-SCHEMA = """
+TABLES_SCHEMA = """
 CREATE TABLE IF NOT EXISTS studies (
     nct_id                  TEXT PRIMARY KEY,
     title                   TEXT,
@@ -52,7 +50,46 @@ CREATE TABLE IF NOT EXISTS studies (
     secondary_outcomes      TEXT,   -- JSON array
     ingested_at             TEXT
 );
+
+CREATE TABLE IF NOT EXIST sources (
+    source_id               INTEGER PRIMARY KEY,
+    type                    TEXT,
+    title                   TEXT,
+    url                     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS evidence_objects (
+    evidence_object_id      INTEGER PRIMARY KEY,
+    type                    TEXT, -- could be turned into a fk with a set of options
+    statement               TEXT, 
+    normalized_value        TEXT,
+    confidence              TEXT -- could also be turned into a fk with a set of options
+);
+
+CREATE TABLE IF NOT EXIST claims (
+    claim_id                INTEGER PRIMARY KEY,
+    statement               TEXT,
+    status                  TEXT, -- could be a fk enum, also could be renamed to 'veracity' or confidence
+    risk_note               TEXT
+);
+
+CREATE TABLE IF NOT EXIST requirements (
+    requirement_id          INTEGER PRIMARY KEY,
+    jurisdiction            TEXT,
+    domain                  TEXT, -- could be fk enum
+    expectation             TEXT
+);
+
+CREATE TABLE IF NOT EXIST gaps (
+    gap_id                  INTEGER PRIMARY KEY,
+    type                    TEXT,
+    severity                TEXT,
+    jurisdiction            TEXT,
+    recommended_action      TEXT
+);
 """
+
+
 
 
 def connect() -> sqlite3.Connection:
@@ -81,6 +118,15 @@ def init_db() -> None:
                     print(f"[db] adding missing column: {col_name}")
                     cursor.execute(f"ALTER TABLE studies ADD COLUMN {col_def};")
     print(f"[db] initialized at {DB_PATH}")
+
+def init_tables() -> None:
+    pass
+
+def init_relationships() -> None:
+    pass
+
+def init_relationship_contraints() -> None:
+    pass
 
 
 def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
