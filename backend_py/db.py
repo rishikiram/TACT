@@ -89,7 +89,62 @@ CREATE TABLE IF NOT EXIST gaps (
 );
 """
 
+RELATIONSHIPS_SCHEMA = """
+CREATE TABLE IF NOT EXIST evidence_object_sources (
+    source_id               INTEGER,
+    evidence_object_id      INTEGER,
+    PRIMARY KEY (source_id, evidence_object_id),
+);
+ALTER TABLE evidence_object_sources(
+    CONSTRAINT fk__source_id__EO_src
+    FOREIGN KEY (source_id)
+    REFERENCES sources(source_id)
+);
+ALTER TABLE evidence_object_sources(
+    CONSTRAINT fk__EO_id__EO_src
+    FOREIGN KEY (evidence_object_id)
+    REFERENCES evidence_objects(evidence_object_id)
+);
 
+CREATE TABLE IF NOT EXISTS claim_evidence_objects (
+    claim_id                INTEGER,
+    evidence_object_id      INTEGER,
+    PRIMARY KEY (claim_id, evidence_object_id)
+);
+ALTER TABLE claim_evidence_objects(
+    CONSTRAINT fk__claim_id__claim_EO
+    FOREIGN KEY (claim_id)
+    REFERENCES claims(claim_id)
+);
+ALTER TABLE claim_evidence_objects(
+    CONSTRAINT fk__EOid__claim_EO
+    FOREIGN KEY (evidence_object_id)
+    REFERENCES evidence_objects(evidence_object_id)
+);
+
+CREATE IF NOT EXIST requirement_claim_gaps (
+    claim_id                INTEGER,
+    requirement_id          INTEGER,
+    gap_id                  INTEGER,
+    PRIMARY KEY (claim_id, requirement_id, gap_id)
+);
+ALTER TABLE requirement_claim_gaps(
+    CONSTRAINT fk__claim_id__claim_req_gap
+    FOREIGN KEY (claim_id)
+    REFERENCES claims(claim_id)
+);
+ALTER TABLE requirement_claim_gaps(
+    CONSTRAINT fk__requirement_id__claim_req_gap
+    FOREIGN KEY (requirement_id)
+    REFERENCES requirements(requirement_id)
+);
+ALTER TABLE requirement_claim_gaps(
+    CONSTRAINT fk__gap_id__claim_req_gap
+    FOREIGN KEY (gap_id)
+    REFERENCES gaps(gap_id)
+);
+
+"""
 
 
 def connect() -> sqlite3.Connection:
@@ -125,8 +180,6 @@ def init_tables() -> None:
 def init_relationships() -> None:
     pass
 
-def init_relationship_contraints() -> None:
-    pass
 
 
 def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
