@@ -188,9 +188,11 @@ def upsert_studies(studies: list[dict]) -> int:
     with connect() as conn:
         for study in studies:
             upsert_study(conn, study)
+        conn.commit()
     return len(studies)
 
 def insert_sources(sources: list[dict]) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacment
     with connect() as conn:
         crsr = conn.cursor()
         for source in sources:
@@ -204,10 +206,26 @@ def insert_sources(sources: list[dict]) -> int:
                 """,
                 source
             )
-
-    return -1
+        conn.commit()
+    return len(sources)
 
 def insert_and_link_EOs(evidence_objs) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacment
+    with connect() as conn:
+        crsr = conn.cursor()
+        for eo in evidence_objs:
+            crsr.execute(
+                """
+                INSERT OR REPLACE INTO evidence_objects (
+                    evidence_object_id, type, statement
+                    normalized_value, confidence
+                ) VALUES (
+                    :evidence_object_id, :type, :statement
+                    :normalized_value, :confidence
+                )
+                """
+            )
+        for 
     return -1
 
 def insert_and_link_claims(claims) -> int:
