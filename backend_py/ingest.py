@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Fetch studies from CT.gov, clean them, and write to SQLite.
 
