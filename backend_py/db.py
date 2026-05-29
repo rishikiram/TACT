@@ -190,7 +190,21 @@ def upsert_studies(studies: list[dict]) -> int:
             upsert_study(conn, study)
     return len(studies)
 
-def insert_sources(sources) -> int:
+def insert_sources(sources: list[dict]) -> int:
+    with connect() as conn:
+        crsr = conn.cursor()
+        for source in sources:
+            crsr.execute(
+                """
+                INSERT OR REPLACE INTO sources (
+                    source_id, type, title, url
+                ) VALUES (
+                    :source_id, :type, :title, :url
+                )
+                """,
+                source
+            )
+
     return -1
 
 def insert_and_link_EOs(evidence_objs) -> int:
