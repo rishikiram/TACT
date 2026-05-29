@@ -190,6 +190,20 @@ def upsert_studies(studies: list[dict]) -> int:
             upsert_study(conn, study)
     return len(studies)
 
+def insert_sources(sources) -> int:
+    return -1
+
+def insert_and_link_EOs(evidence_objs) -> int:
+    return -1
+
+def insert_and_link_claims(claims) -> int:
+    return -1
+
+def insert_requirements(requirements) -> int:
+    return -1
+
+def insert_and_link_gaps(gaps) -> int:
+    return -1
 
 def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
     with connect() as conn:
