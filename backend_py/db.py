@@ -83,7 +83,7 @@ RELATIONSHIPS_SCHEMA = """
 CREATE TABLE evidence_object_sources (
     source_id               INTEGER,
     evidence_object_id      INTEGER,
-    PRIMARY KEY (source_id, evidence_object_id),
+    PRIMARY KEY (source_id, evidence_object_id)
 );
 ALTER TABLE evidence_object_sources(
     CONSTRAINT fk__source_id__EO_src
@@ -114,7 +114,7 @@ ALTER TABLE claim_evidence_objects(
 );
 
 -- Many-to-many-to-many claims and requirements to gaps
-CREATE requirement_claim_gaps (
+CREATE TABLE requirement_claim_gaps (
     claim_id                INTEGER,
     requirement_id          INTEGER,
     gap_id                  INTEGER,
@@ -209,33 +209,110 @@ def insert_sources(sources: list[dict]) -> int:
         conn.commit()
     return len(sources)
 
-def insert_and_link_EOs(evidence_objs) -> int:
-    # TODO: shift pk generation to RDBM, and enable row replacment
+def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacement
+    # Each dict: {evidence_object_id, type, statement, normalized_value, confidence, source_ids: [...]}
     with connect() as conn:
         crsr = conn.cursor()
         for eo in evidence_objs:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO evidence_objects (
-                    evidence_object_id, type, statement
+                    evidence_object_id, type, statement,
                     normalized_value, confidence
                 ) VALUES (
-                    :evidence_object_id, :type, :statement
+                    :evidence_object_id, :type, :statement,
                     :normalized_value, :confidence
                 )
-                """
+                """,
+                eo,
             )
-        for 
-    return -1
+            for source_id in eo.get("source_ids", []):
+                crsr.execute(
+                    """
+                    INSERT OR IGNORE INTO evidence_object_sources (
+                        source_id, evidence_object_id
+                    ) VALUES (?, ?)
+                    """,
+                    (source_id, eo["evidence_object_id"]),
+                )
+        conn.commit()
+    return len(evidence_objs)
 
-def insert_and_link_claims(claims) -> int:
-    return -1
+def insert_and_link_claims(claims: list[dict]) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacement
+    # Each dict: {claim_id, statement, status, risk_note, evidence_object_ids: [...]}
+    with connect() as conn:
+        crsr = conn.cursor()
+        for claim in claims:
+            crsr.execute(
+                """
+                INSERT OR REPLACE INTO claims (
+                    claim_id, statement, status, risk_note
+                ) VALUES (
+                    :claim_id, :statement, :status, :risk_note
+                )
+                """,
+                claim,
+            )
+            for eo_id in claim.get("evidence_object_ids", []):
+                crsr.execute(
+                    """
+                    INSERT OR IGNORE INTO claim_evidence_objects (
+                        claim_id, evidence_object_id
+                    ) VALUES (?, ?)
+                    """,
+                    (claim["claim_id"], eo_id),
+                )
+        conn.commit()
+    return len(claims)
 
-def insert_requirements(requirements) -> int:
-    return -1
+def insert_requirements(requirements: list[dict]) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacement
+    # Each dict: {requirement_id, jurisdiction, domain, expectation}
+    with connect() as conn:
+        crsr = conn.cursor()
+        for req in requirements:
+            crsr.execute(
+                """
+                INSERT OR REPLACE INTO requirements (
+                    requirement_id, jurisdiction, domain, expectation
+                ) VALUES (
+                    :requirement_id, :jurisdiction, :domain, :expectation
+                )
+                """,
+                req,
+            )
+        conn.commit()
+    return len(requirements)
 
-def insert_and_link_gaps(gaps) -> int:
-    return -1
+def insert_and_link_gaps(gaps: list[dict]) -> int:
+    # TODO: shift pk generation to RDBM, and enable row replacement
+    # Each dict: {gap_id, type, severity, jurisdiction, recommended_action, claim_id_requirement_id_trios: [(claim_id, requirement_id)]}
+    with connect() as conn:
+        crsr = conn.cursor()
+        for gap in gaps:
+            crsr.execute(
+                """
+                INSERT OR REPLACE INTO gaps (
+                    gap_id, type, severity, jurisdiction, recommended_action
+                ) VALUES (
+                    :gap_id, :type, :severity, :jurisdiction, :recommended_action
+                )
+                """,
+                gap,
+            )
+            for (claim_id,requirement_id) in gap.get("claim_id_requirement_id_trios", []):
+                crsr.execute(
+                    """
+                    INSERT OR IGNORE INTO requirement_claim_gaps (
+                        claim_id, requirement_id, gap_id
+                    ) VALUES (?, ?, ?)
+                    """,
+                    (claim_id, requirement_id, gap["gap_id"]),
+                )
+        conn.commit()
+    return len(gaps)
 
 def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
     with connect() as conn:
