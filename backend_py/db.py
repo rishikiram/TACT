@@ -44,7 +44,8 @@ CREATE TABLE sources (
     source_id               INTEGER PRIMARY KEY,
     type                    TEXT,
     title                   TEXT,
-    url                     TEXT
+    url                     TEXT,
+    target_evidence_types   TEXT   -- JSON array for now -- this is how im imagining a user programaticaly allowing the repo to build the EOs
 );
 
 CREATE TABLE evidence_objects (
@@ -66,14 +67,16 @@ CREATE TABLE requirements (
     requirement_id          INTEGER PRIMARY KEY,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
-    expectation             TEXT
+    expectation             TEXT,
+    potential_gaps          TEXT  -- JSON array for now
 );
 
 CREATE TABLE gaps (
     gap_id                  INTEGER PRIMARY KEY,
     type                    TEXT,
-    severity                TEXT,
     jurisdiction            TEXT,
+    rationale               TEXT,
+    severity                TEXT,
     recommended_action      TEXT
 );
 """
@@ -83,34 +86,22 @@ RELATIONSHIPS_SCHEMA = """
 CREATE TABLE evidence_object_sources (
     source_id               INTEGER,
     evidence_object_id      INTEGER,
-    PRIMARY KEY (source_id, evidence_object_id)
-);
-ALTER TABLE evidence_object_sources(
-    CONSTRAINT fk__source_id__EO_src
+    PRIMARY KEY (source_id, evidence_object_id),
     FOREIGN KEY (source_id)
-    REFERENCES sources(source_id)
-);
-ALTER TABLE evidence_object_sources(
-    CONSTRAINT fk__EO_id__EO_src
+        REFERENCES sources(source_id),
     FOREIGN KEY (evidence_object_id)
-    REFERENCES evidence_objects(evidence_object_id)
+        REFERENCES evidence_objects(evidence_object_id)
 );
 
 -- Many-to-many evidence to claims
 CREATE TABLE claim_evidence_objects (
     claim_id                INTEGER,
     evidence_object_id      INTEGER,
-    PRIMARY KEY (claim_id, evidence_object_id)
-);
-ALTER TABLE claim_evidence_objects(
-    CONSTRAINT fk__claim_id__claim_EO
+    PRIMARY KEY (claim_id, evidence_object_id),
     FOREIGN KEY (claim_id)
-    REFERENCES claims(claim_id)
-);
-ALTER TABLE claim_evidence_objects(
-    CONSTRAINT fk__EOid__claim_EO
+        REFERENCES claims(claim_id),
     FOREIGN KEY (evidence_object_id)
-    REFERENCES evidence_objects(evidence_object_id)
+        REFERENCES evidence_objects(evidence_object_id)
 );
 
 -- Many-to-many-to-many claims and requirements to gaps
@@ -118,22 +109,13 @@ CREATE TABLE requirement_claim_gaps (
     claim_id                INTEGER,
     requirement_id          INTEGER,
     gap_id                  INTEGER,
-    PRIMARY KEY (claim_id, requirement_id, gap_id)
-);
-ALTER TABLE requirement_claim_gaps(
-    CONSTRAINT fk__claim_id__claim_req_gap
+    PRIMARY KEY (claim_id, requirement_id, gap_id),
     FOREIGN KEY (claim_id)
-    REFERENCES claims(claim_id)
-);
-ALTER TABLE requirement_claim_gaps(
-    CONSTRAINT fk__requirement_id__claim_req_gap
+        REFERENCES claims(claim_id),
     FOREIGN KEY (requirement_id)
-    REFERENCES requirements(requirement_id)
-);
-ALTER TABLE requirement_claim_gaps(
-    CONSTRAINT fk__gap_id__claim_req_gap
+        REFERENCES requirements(requirement_id),
     FOREIGN KEY (gap_id)
-    REFERENCES gaps(gap_id)
+        REFERENCES gaps(gap_id)
 );
 """
 
@@ -143,16 +125,20 @@ def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     # row_factory enables dict-like row access. PostgreSQL equivalent: psycopg2.extras.RealDictCursor
     conn.row_factory = sqlite3.Row
+
     # DIALECT NOTE: PRAGMA is SQLite-specific. Remove for PostgreSQL.
     conn.cursor().execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys = ON")
+
+    # print("conn isolation level:",(conn.isolation_level is None))
     return conn
 
 
 def init_db() -> None:
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(TABLES_SCHEMA)
-        cursor.execute(RELATIONSHIPS_SCHEMA)
+        cursor.executescript(TABLES_SCHEMA)
+        cursor.executescript(RELATIONSHIPS_SCHEMA)
     print(f"[db] initialized at {DB_PATH}")
 
 def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
@@ -188,7 +174,7 @@ def upsert_studies(studies: list[dict]) -> int:
     with connect() as conn:
         for study in studies:
             upsert_study(conn, study)
-        conn.commit()
+        # conn.commit() # TODO: think about where I want commits to happen. Possibly it should happen less frequently.
     return len(studies)
 
 def insert_sources(sources: list[dict]) -> int:
@@ -199,14 +185,14 @@ def insert_sources(sources: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO sources (
-                    source_id, type, title, url
+                    source_id, type, title, url, target_evidence_types
                 ) VALUES (
-                    :source_id, :type, :title, :url
+                    :source_id, :type, :title, :url, :target_evidence_types
                 )
                 """,
                 source
             )
-        conn.commit()
+        # conn.commit()
     return len(sources)
 
 def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
@@ -236,7 +222,7 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
                     """,
                     (source_id, eo["evidence_object_id"]),
                 )
-        conn.commit()
+        # conn.commit()
     return len(evidence_objs)
 
 def insert_and_link_claims(claims: list[dict]) -> int:
@@ -264,7 +250,7 @@ def insert_and_link_claims(claims: list[dict]) -> int:
                     """,
                     (claim["claim_id"], eo_id),
                 )
-        conn.commit()
+        # conn.commit()
     return len(claims)
 
 def insert_requirements(requirements: list[dict]) -> int:
@@ -276,14 +262,14 @@ def insert_requirements(requirements: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO requirements (
-                    requirement_id, jurisdiction, domain, expectation
+                    requirement_id, jurisdiction, domain, expectation, potential_gaps
                 ) VALUES (
-                    :requirement_id, :jurisdiction, :domain, :expectation
+                    :requirement_id, :jurisdiction, :domain, :expectation, :potential_gaps
                 )
                 """,
                 req,
             )
-        conn.commit()
+        # conn.commit()
     return len(requirements)
 
 def insert_and_link_gaps(gaps: list[dict]) -> int:
@@ -295,9 +281,9 @@ def insert_and_link_gaps(gaps: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO gaps (
-                    gap_id, type, severity, jurisdiction, recommended_action
+                    gap_id, type, jurisdiction, rationale, severity, recommended_action
                 ) VALUES (
-                    :gap_id, :type, :severity, :jurisdiction, :recommended_action
+                    :gap_id, :type, :jurisdiction, :rationale, :severity, :recommended_action
                 )
                 """,
                 gap,
@@ -311,7 +297,7 @@ def insert_and_link_gaps(gaps: list[dict]) -> int:
                     """,
                     (claim_id, requirement_id, gap["gap_id"]),
                 )
-        conn.commit()
+        # conn.commit()
     return len(gaps)
 
 def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
