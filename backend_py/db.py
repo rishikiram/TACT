@@ -41,7 +41,8 @@ CREATE TABLE studies (
 );
 
 CREATE TABLE sources (
-    source_id               INTEGER PRIMARY KEY,
+    source_id               INTEGER PRIMARY KEY, -- TODO: add uid's
+    source_uid              STRING UNIQUE,
     type                    TEXT,
     title                   TEXT,
     url                     TEXT,
@@ -50,6 +51,7 @@ CREATE TABLE sources (
 
 CREATE TABLE evidence_objects (
     evidence_object_id      INTEGER PRIMARY KEY,
+    evidence_uid            STRING UNIQUE,
     type                    TEXT, -- could be turned into a fk with a set of options
     statement               TEXT, 
     normalized_value        TEXT,
@@ -58,6 +60,7 @@ CREATE TABLE evidence_objects (
 
 CREATE TABLE claims (
     claim_id                INTEGER PRIMARY KEY,
+    claim_uid               STRING UNIQUE,
     statement               TEXT,
     status                  TEXT, -- could be a fk enum, also could be renamed to 'veracity' or confidence
     risk_note               TEXT
@@ -65,6 +68,7 @@ CREATE TABLE claims (
 
 CREATE TABLE requirements (
     requirement_id          INTEGER PRIMARY KEY,
+    requirement_uid         STRING UNIQUE,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
     requirement_text             TEXT,
@@ -73,6 +77,7 @@ CREATE TABLE requirements (
 
 CREATE TABLE gaps (
     gap_id                  INTEGER PRIMARY KEY,
+    gap_uid                 STRING UNIQUE,
     type                    TEXT,
     jurisdiction            TEXT,
     rationale               TEXT,
@@ -185,9 +190,9 @@ def insert_sources(sources: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO sources (
-                    source_id, type, title, url, target_evidence_types
+                    source_uid, type, title, url, target_evidence_types
                 ) VALUES (
-                    :source_id, :type, :title, :url, :target_evidence_types
+                    :source_uid, :type, :title, :url, :target_evidence_types
                 )
                 """,
                 source
@@ -197,30 +202,32 @@ def insert_sources(sources: list[dict]) -> int:
 
 def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {evidence_object_id, type, statement, normalized_value, confidence, source_ids: [...]}
+    # Each dict: {evidence_object_uid, type, statement, normalized_value, confidence, source_uids: [...]}
     with connect() as conn:
         crsr = conn.cursor()
         for eo in evidence_objs:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO evidence_objects (
-                    evidence_object_id, type, statement,
+                    evidence_object_uid, type, statement,
                     normalized_value, confidence
                 ) VALUES (
-                    :evidence_object_id, :type, :statement,
+                    :evidence_object_uid, :type, :statement,
                     :normalized_value, :confidence
                 )
                 """,
                 eo,
             )
-            for source_id in eo.get("source_ids", []):
+            eo_id = query(f"SELECT evidence_objects_id FROM evidence_objects WHERE evidence_object_uid = {eo["evidence_object_uid"]}")[0][0]
+            for source_uid in eo.get("source_uids", []):
+                source_id = query(f"SELECT source_id FROM sources WHERE source_uid = {source_uid}")
                 crsr.execute(
                     """
                     INSERT OR IGNORE INTO evidence_object_sources (
                         source_id, evidence_object_id
                     ) VALUES (?, ?)
                     """,
-                    (source_id, eo["evidence_object_id"]),
+                    (source_id, eo_id),
                 )
         # conn.commit()
     return len(evidence_objs)
