@@ -12,6 +12,7 @@ REQ-US-COMP-001:
   potential_gaps: "Comparative evidence gap"
   contractor_note: "Use only as a high-level evidence-risk archetype."
 # REQ-US-COMP-001	U.S. payer evidence-risk archetype	Comparator	Comparative clinical claims carry higher evidence risk when no head-to-head or credible indirect comparison exists.	Comparative evidence gap	Use only as a high-level evidence-risk archetype.
+
 REQ-NICE-ENDPT-001:
   jurisdiction: "NICE/England"
   domain: "Endpoint Maturity"
@@ -25,6 +26,8 @@ REQ-US-ENDPT-001:
   requirement_text: "Evidence risk increases when claims rely primarily on ORR or immature survival data."
   potential_gaps: "Surrogate endpoint reliance gap"
   contractor_note: "Useful for flagging ORR-primary evidence limitations."
+
+
 # REQ-US-ENDPT-001	U.S. payer evidence-risk archetype	Endpoint maturity	Evidence risk increases when claims rely primarily on ORR or immature survival data.	Surrogate endpoint reliance gap	Useful for flagging ORR-primary evidence limitations.
 REQ-NICE-QOL-001:
   jurisdiction: "NICE/England"
@@ -40,6 +43,7 @@ REQ-US-QOL-001:
   potential_gaps: "Unsupported QoL claim gap"
   contractor_note: "Use especially for aggressive QoL claims."
 # REQ-US-QOL-001	U.S. payer evidence-risk archetype	QoL/PRO	Quality-of-life improvement claims should be supported by prespecified, interpretable, and sufficiently complete patient-reported outcome evidence.	Unsupported QoL claim gap	Use especially for aggressive QoL claims.
+
 REQ-US-BIOMARKER-001:
   jurisdiction: "U.S. payer evidence-risk archetype"
   domain: "Biomarker"
@@ -54,6 +58,7 @@ REQ-NICE-POP-001:
   potential_gaps: "Population alignment gap"
   contractor_note: "Useful if line of therapy or eligibility is ambiguous."
 # REQ-NICE-POP-001	NICE/England	Population	The evaluated population should align clearly with the proposed indication and relevant clinical practice population.	Population alignment gap	Useful if line of therapy or eligibility is ambiguous.
+
 REQ-CLAIM-SUPPORT-001:
   jurisdiction: "Cross-jurisdiction"
   domain: "Claim support"
@@ -75,20 +80,23 @@ REQ-SAFETY-001:
   potential_gaps: "Safety maturity gap"
   contractor_note: "Allows cautious support for early safety while flagging maturity limits."
 # REQ-SAFETY-001	Cross-jurisdiction	Safety	Safety and tolerability claims should be supported by observed adverse event data and should distinguish early evidence from mature safety evidence.	Safety maturity gap	Allows cautious support for early safety while flagging maturity limits.
-REQ-NICE-ECON-001:
+
+REQ-NICE-ECON-001: 
   jurisdiction: "NICE/England"
   domain: "Economic evidence"
   requirement_text: "Cost-effectiveness assessment requires inputs for comparative effectiveness, survival, quality of life, treatment duration, safety, and resource use."
   potential_gaps: "Economic evidence readiness gap"
   contractor_note: "Should trigger if economic inputs are unavailable or underdeveloped."
-# REQ-NICE-ECON-001	NICE/England	Economic evidence	Cost-effectiveness assessment requires inputs for comparative effectiveness, survival, quality of life, treatment duration, safety, and resource use.	Economic evidence readiness gap	Should trigger if economic inputs are unavailable or underdeveloped.
-REQ-US-ECON-001:
+# REQ-NICE-ECON-001	NICE/England	Economics evidence	Cost-effectiveness assessment requires inputs for comparative effectiveness, survival, quality of life, treatment duration, safety, and resource use.	Economic evidence readiness gap	Should trigger if economic inputs are unavailable or underdeveloped.
+REQ-US-ECON-001: # how is comparator assumptions used for economic evidence.
   jurisdiction: "U.S. payer evidence-risk archetype"
   domain: "Economic evidence"
   requirement_text: "Evidence packages should identify likely budget impact, eligible population, treatment duration, and comparator assumptions."
   potential_gaps: "Budget impact evidence gap"
   contractor_note: "Use as high-level evidence-risk logic, not payer-specific guidance."
 # REQ-US-ECON-001	U.S. payer evidence-risk archetype	Economic evidence	Evidence packages should identify likely budget impact, eligible population, treatment duration, and comparator assumptions.	Budget impact evidence gap	Use as high-level evidence-risk logic, not payer-specific guidance.
+
+# META-REQUIREMENTS - will be implemented with database functions or validation
 REQ-TRACE-001:
   jurisdiction: "Cross-jurisdiction"
   domain: "Traceability"
