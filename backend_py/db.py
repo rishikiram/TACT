@@ -41,8 +41,8 @@ CREATE TABLE studies (
 );
 
 CREATE TABLE sources (
-    source_id               INTEGER PRIMARY KEY, -- TODO: add uid's
-    source_uid              STRING UNIQUE,
+    id                      INTEGER PRIMARY KEY, -- TODO: add uid's
+    uid                     STRING UNIQUE,
     type                    TEXT,
     title                   TEXT,
     url                     TEXT,
@@ -50,8 +50,8 @@ CREATE TABLE sources (
 );
 
 CREATE TABLE evidence_objects (
-    evidence_object_id      INTEGER PRIMARY KEY,
-    evidence_uid            STRING UNIQUE,
+    id                      INTEGER PRIMARY KEY,
+    uid                     STRING UNIQUE,
     type                    TEXT, -- could be turned into a fk with a set of options
     statement               TEXT, 
     normalized_value        TEXT,
@@ -59,25 +59,25 @@ CREATE TABLE evidence_objects (
 );
 
 CREATE TABLE claims (
-    claim_id                INTEGER PRIMARY KEY,
-    claim_uid               STRING UNIQUE,
+    id                      INTEGER PRIMARY KEY,
+    uid                     STRING UNIQUE,
     statement               TEXT,
     status                  TEXT, -- could be a fk enum, also could be renamed to 'veracity' or confidence
     risk_note               TEXT
 );
 
 CREATE TABLE requirements (
-    requirement_id          INTEGER PRIMARY KEY,
-    requirement_uid         STRING UNIQUE,
+    id                      INTEGER PRIMARY KEY,
+    uid                     STRING UNIQUE,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
-    requirement_text             TEXT,
+    requirement_text        TEXT,
     potential_gaps          TEXT  -- JSON array for now
 );
 
 CREATE TABLE gaps (
-    gap_id                  INTEGER PRIMARY KEY,
-    gap_uid                 STRING UNIQUE,
+    id                      INTEGER PRIMARY KEY,
+    uid                     STRING UNIQUE,
     type                    TEXT,
     jurisdiction            TEXT,
     rationale               TEXT,
@@ -93,9 +93,9 @@ CREATE TABLE evidence_object_sources (
     evidence_object_id      INTEGER,
     PRIMARY KEY (source_id, evidence_object_id),
     FOREIGN KEY (source_id)
-        REFERENCES sources(source_id),
+        REFERENCES sources(id),
     FOREIGN KEY (evidence_object_id)
-        REFERENCES evidence_objects(evidence_object_id)
+        REFERENCES evidence_objects(id)
 );
 
 -- Many-to-many evidence to claims
@@ -104,9 +104,9 @@ CREATE TABLE claim_evidence_objects (
     evidence_object_id      INTEGER,
     PRIMARY KEY (claim_id, evidence_object_id),
     FOREIGN KEY (claim_id)
-        REFERENCES claims(claim_id),
+        REFERENCES claims(id),
     FOREIGN KEY (evidence_object_id)
-        REFERENCES evidence_objects(evidence_object_id)
+        REFERENCES evidence_objects(id)
 );
 
 -- Many-to-many-to-many claims and requirements to gaps
@@ -116,11 +116,11 @@ CREATE TABLE requirement_claim_gaps (
     gap_id                  INTEGER,
     PRIMARY KEY (claim_id, requirement_id, gap_id),
     FOREIGN KEY (claim_id)
-        REFERENCES claims(claim_id),
+        REFERENCES claims(id),
     FOREIGN KEY (requirement_id)
-        REFERENCES requirements(requirement_id),
+        REFERENCES requirements(id),
     FOREIGN KEY (gap_id)
-        REFERENCES gaps(gap_id)
+        REFERENCES gaps(id)
 );
 """
 
@@ -190,9 +190,9 @@ def insert_sources(sources: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO sources (
-                    source_uid, type, title, url, target_evidence_types
+                    uid, type, title, url, target_evidence_types
                 ) VALUES (
-                    :source_uid, :type, :title, :url, :target_evidence_types
+                    :uid, :type, :title, :url, :target_evidence_types
                 )
                 """,
                 source
@@ -202,25 +202,25 @@ def insert_sources(sources: list[dict]) -> int:
 
 def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {evidence_object_uid, type, statement, normalized_value, confidence, source_uids: [...]}
+    # Each dict: {uid, type, statement, normalized_value, confidence, source_uids: [...]}
     with connect() as conn:
         crsr = conn.cursor()
         for eo in evidence_objs:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO evidence_objects (
-                    evidence_object_uid, type, statement,
+                    uid, type, statement,
                     normalized_value, confidence
                 ) VALUES (
-                    :evidence_object_uid, :type, :statement,
+                    :uid, :type, :statement,
                     :normalized_value, :confidence
                 )
                 """,
                 eo,
             )
-            eo_id = query(f"SELECT evidence_objects_id FROM evidence_objects WHERE evidence_object_uid = {eo["evidence_object_uid"]}")[0][0]
+            eo_id = get_id(conn, "evidence_objects", eo["uid"])
             for source_uid in eo.get("source_uids", []):
-                source_id = query(f"SELECT source_id FROM sources WHERE source_uid = {source_uid}")
+                source_id = get_id(conn, "sources", source_uid)
                 crsr.execute(
                     """
                     INSERT OR IGNORE INTO evidence_object_sources (
@@ -234,44 +234,46 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
 
 def insert_and_link_claims(claims: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {claim_id, statement, status, risk_note, evidence_object_ids: [...]}
+    # Each dict: {uid, statement, status, risk_note, evidence_object_uids: [...]}
     with connect() as conn:
         crsr = conn.cursor()
         for claim in claims:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO claims (
-                    claim_id, statement, status, risk_note
+                    uid, statement, status, risk_note
                 ) VALUES (
-                    :claim_id, :statement, :status, :risk_note
+                    :uid, :statement, :status, :risk_note
                 )
                 """,
                 claim,
             )
-            for eo_id in claim.get("evidence_object_ids", []):
+            claim_id = get_id(conn, "claims", claim["uid"])
+            for eo_uid in claim.get("evidence_object_uids", []):
+                eo_id = get_id(conn, "evidence_objects", eo_uid)
                 crsr.execute(
                     """
                     INSERT OR IGNORE INTO claim_evidence_objects (
                         claim_id, evidence_object_id
                     ) VALUES (?, ?)
                     """,
-                    (claim["claim_id"], eo_id),
+                    (claim_id, eo_id),
                 )
         # conn.commit()
     return len(claims)
 
 def insert_requirements(requirements: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {requirement_id, jurisdiction, domain, requirement_text}
+    # Each dict: {uid, jurisdiction, domain, requirement_text}
     with connect() as conn:
         crsr = conn.cursor()
         for req in requirements:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO requirements (
-                    requirement_id, jurisdiction, domain, requirement_text, potential_gaps
+                    uid, jurisdiction, domain, requirement_text, potential_gaps
                 ) VALUES (
-                    :requirement_id, :jurisdiction, :domain, :requirement_text, :potential_gaps
+                    :uid, :jurisdiction, :domain, :requirement_text, :potential_gaps
                 )
                 """,
                 req,
@@ -281,37 +283,38 @@ def insert_requirements(requirements: list[dict]) -> int:
 
 def insert_and_link_gaps(gaps: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {gap_id, type, severity, jurisdiction, recommended_action, claim_id_requirement_id_trios: [(claim_id, requirement_id)]}
+    # Each dict: {uid, type, severity, jurisdiction, recommended_action, claim_uid_requirement_uid_trios: [(claim_uid, requirement_uid)]}
     with connect() as conn:
         crsr = conn.cursor()
         for gap in gaps:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO gaps (
-                    gap_id, type, jurisdiction, rationale, severity, recommended_action
+                    uid, type, jurisdiction, rationale, severity, recommended_action
                 ) VALUES (
-                    :gap_id, :type, :jurisdiction, :rationale, :severity, :recommended_action
+                    :uid, :type, :jurisdiction, :rationale, :severity, :recommended_action
                 )
                 """,
                 gap,
             )
-            for (claim_id,requirement_id) in gap.get("claim_id_requirement_id_trios", []):
+            gap_id = get_id(conn, "gaps", gap["uid"])
+            for (claim_uid,requirement_uid) in gap.get("claim_uid_requirement_uid_trios", []):
+                claim_id = get_id(conn, "claims", claim_uid)
+                requirement_id = get_id(conn, "requirements", requirement_uid)
                 crsr.execute(
                     """
                     INSERT OR IGNORE INTO requirement_claim_gaps (
                         claim_id, requirement_id, gap_id
                     ) VALUES (?, ?, ?)
                     """,
-                    (claim_id, requirement_id, gap["gap_id"]),
+                    (claim_id, requirement_id, gap_id),
                 )
-        # conn.commit()
     return len(gaps)
 
-def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
-    with connect() as conn:
-        cursor = conn.cursor()
-        cursor.execute(sql, params)
-        return cursor.fetchall()
+def query(sql: str, params: tuple = (), conn = connect()) -> list[sqlite3.Row]:
+    cursor = conn.cursor()
+    cursor.execute(sql, params)
+    return cursor.fetchall()
 
 
 def count() -> int:
@@ -329,6 +332,8 @@ def get_table_columns(conn, table_name: str) -> list[dict]:
     rows = cursor.fetchall()
     return [{"name": r["name"], "type": r["type"], "notnull": bool(r["notnull"])} for r in rows]
 
+def get_id(conn, table_name, uid) -> int:
+    return query("SELECT id FROM ? WHERE uid = ?", params = (table_name, uid), conn = conn)[0][0]
 
 def build_data_dictionary(table_name: str = "studies") -> None:
     """

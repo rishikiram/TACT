@@ -80,7 +80,7 @@ def ingest_tracible_stack() -> None:
     target_evidence_types = ["design", "population", "endpoints", "comparator status"]
     db.insert_sources([
         {
-            "source_uid": "SRC-002", 
+            "uid": "SRC-002", 
             "type": "simulated internal document", 
             "title": "VER-101 Phase II protocol synopsis",
             "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
@@ -90,29 +90,29 @@ def ingest_tracible_stack() -> None:
 
     db.insert_and_link_EOs([
         {
-            "evidence_object_uid": "EO-003",
+            "uid": "EO-003",
             "type": "comparator", 
             "statement": "No randomized comparator arm is included", 
             "normalized_value": "No head-to-head comparator",
             "confidence":  "high",
-            "source_ids": [2]
+            "source_uids": ["SRC-002"]
         }
     ])
 
     db.insert_and_link_claims([
         {
-            "claim_id": "CLAIM-002",
+            "uid": "CLAIM-002",
             "statement": "VER-101 improves progression-free survival versus current standard of care.",
             "status": "unsupported",
             "risk_note": "No randomized comparator and no comparative PFS estimate.",
-            "evidence_object_ids": [3] #,5]
+            "evidence_object_uids": ["EO-003"] #,5]
         }
     ])
 
     potential_gaps = ["comparator uncertainty"]
     db.insert_requirements([
         {
-            "requirement_id": "REQ-NICE-001",
+            "uid": "REQ-NICE-001",
             "jurisdiction": "NICE/England",
             "domain": "comparator",
             "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
@@ -122,13 +122,13 @@ def ingest_tracible_stack() -> None:
 
     db.insert_and_link_gaps([
         {
-            "gap_id": "GAP-001",
+            "uid": "GAP-001",
             "type": "comparator uncertainty",
             "severity": "high",
             "jurisdiction": "NICE/England",
             "rationale": "no randomized comparator",
             "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
-            "claim_id_requirement_id_trios": [(2, 1)]
+            "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
         }
     ])
 
