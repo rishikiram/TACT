@@ -67,7 +67,7 @@ CREATE TABLE requirements (
     requirement_id          INTEGER PRIMARY KEY,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
-    expectation             TEXT,
+    requirement_text             TEXT,
     potential_gaps          TEXT  -- JSON array for now
 );
 
@@ -255,16 +255,16 @@ def insert_and_link_claims(claims: list[dict]) -> int:
 
 def insert_requirements(requirements: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
-    # Each dict: {requirement_id, jurisdiction, domain, expectation}
+    # Each dict: {requirement_id, jurisdiction, domain, requirement_text}
     with connect() as conn:
         crsr = conn.cursor()
         for req in requirements:
             crsr.execute(
                 """
                 INSERT OR REPLACE INTO requirements (
-                    requirement_id, jurisdiction, domain, expectation, potential_gaps
+                    requirement_id, jurisdiction, domain, requirement_text, potential_gaps
                 ) VALUES (
-                    :requirement_id, :jurisdiction, :domain, :expectation, :potential_gaps
+                    :requirement_id, :jurisdiction, :domain, :requirement_text, :potential_gaps
                 )
                 """,
                 req,
