@@ -1,24 +1,24 @@
 # COMPARATORS
 CLAIM-006:
-  statement: "VER-101 gives better outcomes than placebo comparator"
-  requirements:
-    - REQ-NICE-COMP-001
-    - REQ-US-COMP-001
-    - REQ-NICE-ECON-001
-CLAIM-007:
   statement: "VER-101 gives better outcomes than standard-of-care comparator"
   requirements:
     - REQ-NICE-COMP-001
     - REQ-US-COMP-001
     - REQ-NICE-ECON-001
+CLAIM-007:
+  statement: "VER-101 gives better outcomes than direct comparator"
+  requirements:
+    - REQ-NICE-COMP-001
+    - REQ-US-COMP-001
+    - REQ-NICE-ECON-001
 CLAIM-008:
-  statement: "VER-101 gives better outcomes than indirect comparator"
+  statement: "VER-101 gives better outcomes than placebo comparator"
   requirements:
     - REQ-NICE-COMP-001
     - REQ-US-COMP-001
     - REQ-NICE-ECON-001
 CLAIM-009:
-  statement: "VER-101 gives better outcomes than direct comparator"
+  statement: "VER-101 gives better outcomes than indirect comparator"
   requirements:
     - REQ-NICE-COMP-001
     - REQ-US-COMP-001
