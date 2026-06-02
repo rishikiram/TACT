@@ -62,7 +62,8 @@ CREATE TABLE claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
-    status                  TEXT, -- could be a fk enum, also could be renamed to 'veracity' or confidence
+    support_status          TEXT,
+    review_status           TEXT,
     risk_note               TEXT
 );
 
@@ -232,22 +233,28 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
         # conn.commit()
     return len(evidence_objs)
 
+def insert_claims(conn, claims: list[dict]) -> int:
+    # Each dict: {uid, statement, support_status, review_status, risk_note,}
+    crsr = conn.cursor()
+    for claim in claims:
+        crsr.execute(
+            """
+            INSERT OR REPLACE INTO claims (
+                uid, statement, support_status, review_status, risk_note
+            ) VALUES (
+                :uid, :statement, :support_status, :review_status, :risk_note
+            )
+            """,
+            claim,
+        )
+    return len(claims)
+
 def insert_and_link_claims(claims: list[dict]) -> int:
-    # TODO: shift pk generation to RDBM, and enable row replacement
     # Each dict: {uid, statement, status, risk_note, evidence_object_uids: [...]}
     with connect() as conn:
+        insert_claims(conn, claims)
         crsr = conn.cursor()
         for claim in claims:
-            crsr.execute(
-                """
-                INSERT OR REPLACE INTO claims (
-                    uid, statement, status, risk_note
-                ) VALUES (
-                    :uid, :statement, :status, :risk_note
-                )
-                """,
-                claim,
-            )
             claim_id = get_id(conn, "claims", claim["uid"])
             for eo_uid in claim.get("evidence_object_uids", []):
                 eo_id = get_id(conn, "evidence_objects", eo_uid)
@@ -259,7 +266,6 @@ def insert_and_link_claims(claims: list[dict]) -> int:
                     """,
                     (claim_id, eo_id),
                 )
-        # conn.commit()
     return len(claims)
 
 def insert_requirements(requirements: list[dict]) -> int:
