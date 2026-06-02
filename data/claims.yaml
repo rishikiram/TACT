@@ -59,6 +59,12 @@ CLAIM-004:
     - REQ-NICE-QOL-001
     - REQ-US-QOL-001
     - REQ-NICE-ECON-001
+CLAIM-011:
+  statement: "Patient Reported Outcomes support Quality of Life improvements." 
+  requirements:
+    - REQ-NICE-QOL-001
+    - REQ-US-QOL-001
+    - REQ-NICE-ECON-001
 # Unsupported EO-007 PROs are exploratory, incomplete, and not sufficient for a strong QoL improvement claim."
 
 # BIOMARKER and POPULATION
@@ -70,14 +76,14 @@ CLAIM-005:
 # Partially supported EO-002, EO-009 Population is defined, but testing pathway and comparative positioning remain uncertain.
 
 # SAFTEY
-CLAIM-011:
+CLAIM-012:
   statement: "VER-101 did not produce excessive adverse events."
   requirements:
     - REQ-NICE-SAFTEY-001
     - REQ-NICE-ECON-001
 
 # ECONOMIC VIABILITY
-CLAIM-012:
+CLAIM-013:
   statement: "Budget, eligible population, and resource use have been considered for economic viability."
   requirements:
     - REQ-NICE-ECON-001

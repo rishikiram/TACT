@@ -26,9 +26,9 @@ REQ-US-ENDPT-001:
   requirement_text: "Evidence risk increases when claims rely primarily on ORR or immature survival data."
   potential_gaps: "Surrogate endpoint reliance gap"
   contractor_note: "Useful for flagging ORR-primary evidence limitations."
-
-
 # REQ-US-ENDPT-001	U.S. payer evidence-risk archetype	Endpoint maturity	Evidence risk increases when claims rely primarily on ORR or immature survival data.	Surrogate endpoint reliance gap	Useful for flagging ORR-primary evidence limitations.
+
+
 REQ-NICE-QOL-001:
   jurisdiction: "NICE/England"
   domain: "QoL/PRO"
