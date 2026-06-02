@@ -333,7 +333,8 @@ def get_table_columns(conn, table_name: str) -> list[dict]:
     return [{"name": r["name"], "type": r["type"], "notnull": bool(r["notnull"])} for r in rows]
 
 def get_id(conn, table_name, uid) -> int:
-    return query("SELECT id FROM ? WHERE uid = ?", params = (table_name, uid), conn = conn)[0][0]
+    # NOTE: security risk, can be improved later
+    return query(f"SELECT id FROM {table_name} WHERE uid = ?", params = (uid,), conn = conn)[0][0]
 
 def build_data_dictionary(table_name: str = "studies") -> None:
     """
