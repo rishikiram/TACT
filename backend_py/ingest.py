@@ -115,7 +115,7 @@ def ingest_tracible_stack() -> None:
             "requirement_id": 1,
             "jurisdiction": "NICE/England",
             "domain": "comparator",
-            "expectation": "Evidence should support relative clinical effectiveness against a relevant comparator.",
+            "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
             "potential_gaps": json.dumps(potential_gaps)
         }
     ])
