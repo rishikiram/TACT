@@ -27,4 +27,4 @@ dataDict-init:
 	python -c "from backend_py.db import build_data_dictionary; build_data_dictionary()"
 
 ingest-traceable:
-	python -c "from backend_py.ingest import ingest_tracible_stack; ingest_tracible_stack();"
+	python -c "from backend_py.ingest import ingest_tracible_stack_test; ingest_tracible_stack_test();"

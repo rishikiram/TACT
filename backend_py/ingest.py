@@ -68,7 +68,7 @@ def ingest_studies(params: dict) -> None:
     print(f"[ingest] done — db grew from {before} → {after} studies")
 
 
-def ingest_tracible_stack() -> None:
+def ingest_tracible_stack_test() -> None:
     db.init_db()
 
     sources_before = db.query("SELECT COUNT(*) FROM sources")[0][0]
@@ -140,6 +140,7 @@ def ingest_tracible_stack() -> None:
 
     
     print(
+        "----------------\n"
         f"Sources inserted: {sources_after - sources_before}\n"
         f"EOs inserted: {EOs_after - EOs_before}\n"
         f"Claims inserted: {claims_after - claims_before}\n"
@@ -148,11 +149,13 @@ def ingest_tracible_stack() -> None:
     )
 
 
+
+
 if __name__ == "__main__":
     presets = load_presets()
     params = parse_args(presets)
     # ingest_studies(params)
-    ingest_tracible_stack()
+    ingest_tracible_stack_test()
 
 def testing():
     print( db.query("SELECT COUNT(*) FROM sources")[0][0])
