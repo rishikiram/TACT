@@ -71,6 +71,8 @@ REQ-US-BIOMARKER-001:
   contractor_note: Relevant to KRAS G12C-defined population and testing assumptions.
   claim_uids:
   - CLAIM-005
+  - CLAIM-014
+  - CLAIM-015
 REQ-NICE-POP-001:
   jurisdiction: NICE/England
   domain: Population
@@ -109,15 +111,6 @@ REQ-NICE-ECON-001:
   potential_gaps: Economic evidence readiness gap
   contractor_note: Should trigger if economic inputs are unavailable or underdeveloped.
   claim_uids:
-  - CLAIM-006
-  - CLAIM-007
-  - CLAIM-008
-  - CLAIM-009
-  - CLAIM-002
-  - CLAIM-010
-  - CLAIM-004
-  - CLAIM-011
-  - CLAIM-012
   - CLAIM-013
 REQ-US-ECON-001:
   jurisdiction: U.S. payer evidence-risk archetype

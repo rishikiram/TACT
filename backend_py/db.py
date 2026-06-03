@@ -3,8 +3,15 @@ from pathlib import Path
 
 DB_PATH = Path(__file__).parent.parent / "data" / "clinical_trials.db"
 
+CLAIM_STATUS_ENUM: tuple = ("assumption", "unsupported", "partially supported", "supported")
+allowed_claim_status = ", ".join(f"'{s}'" for s in CLAIM_STATUS_ENUM)
+CLAIM_REVIEW_STATUS_ENUM: tuple = ("ai_draft", "needs_review", "accepted", "rejected", "revised")
+allowed_claim_review_status = ", ".join(f"'{s}'" for s in CLAIM_REVIEW_STATUS_ENUM)
 
-TABLES_SCHEMA = """
+GAP_SEVERITY_ENUM: tuple = ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding")
+allowed_gaps = ", ".join(f"'{s}'" for s in GAP_SEVERITY_ENUM)
+
+TABLES_SCHEMA = f"""
 CREATE TABLE studies (
     nct_id                  TEXT PRIMARY KEY,
     title                   TEXT,
@@ -34,7 +41,7 @@ CREATE TABLE studies (
     allocation              TEXT,
     intervention_model      TEXT,
     primary_purpose         TEXT,
-    locations               TEXT,   -- JSON array of {facility, city, state, country, lat, lon}
+    locations               TEXT,   -- JSON array of [facility, city, state, country, lat, lon]
     primary_outcomes        TEXT,   -- JSON array
     secondary_outcomes      TEXT,   -- JSON array
     ingested_at             TEXT
@@ -62,8 +69,8 @@ CREATE TABLE claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
-    support_status          TEXT,
-    review_status           TEXT,
+    support_status          TEXT CHECK (status IN ({allowed_claim_status})),
+    review_status           TEXT CHEKC (status in ({allowed_claim_review_status})),
     risk_note               TEXT
 );
 
@@ -82,7 +89,7 @@ CREATE TABLE gaps (
     type                    TEXT,
     jurisdiction            TEXT,
     rationale               TEXT,
-    severity                TEXT,
+    severity                TEXT CHECK (severity in ({allowed_gaps})),
     recommended_action      TEXT
 );
 """
