@@ -69,8 +69,8 @@ CREATE TABLE claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
-    support_status          TEXT CHECK (status IN ({allowed_claim_status})),
-    review_status           TEXT CHEKC (status in ({allowed_claim_review_status})),
+    support_status          TEXT CHECK (status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[1]}',
+    review_status           TEXT CHEKC (status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
     risk_note               TEXT
 );
 
@@ -197,7 +197,7 @@ def insert_sources(sources: list[dict]) -> int:
         for source in sources:
             crsr.execute(
                 """
-                INSERT OR REPLACE INTO sources (
+                INSERT INTO sources (
                     uid, type, title, url, target_evidence_types
                 ) VALUES (
                     :uid, :type, :title, :url, :target_evidence_types
@@ -216,7 +216,7 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
         for eo in evidence_objs:
             crsr.execute(
                 """
-                INSERT OR REPLACE INTO evidence_objects (
+                INSERT INTO evidence_objects (
                     uid, type, statement,
                     normalized_value, confidence
                 ) VALUES (
@@ -242,15 +242,16 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
 
 def insert_claims(conn, claims: list[dict]) -> int:
     # Each dict: {uid, statement, support_status, review_status, risk_note,}
+    allowed_cols = ("uid", "statement", "support_status", "review_status", "risk_note")
     crsr = conn.cursor()
     for claim in claims:
+        row = {k: claim[k] for k in allowed_cols if k in claim}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
         crsr.execute(
-            """
-            INSERT OR REPLACE INTO claims (
-                uid, statement, support_status, review_status, risk_note
-            ) VALUES (
-                :uid, :statement, :support_status, :review_status, :risk_note
-            )
+            f"""
+            INSERT INTO claims ({cols})
+            VALUES ({placeholders})
             """,
             claim,
         )
@@ -267,7 +268,7 @@ def insert_and_link_claims(claims: list[dict]) -> int:
                 eo_id = get_id(conn, "evidence_objects", eo_uid)
                 crsr.execute(
                     """
-                    INSERT OR IGNORE INTO claim_evidence_objects (
+                    INSERT INTO claim_evidence_objects (
                         claim_id, evidence_object_id
                     ) VALUES (?, ?)
                     """,
@@ -294,15 +295,30 @@ def insert_requirements(requirements: list[dict]) -> int:
         # conn.commit()
     return len(requirements)
 
+def insert_gaps(conn, gaps: list[dict]) -> int:
+    allowed_cols = 'uid', 'type', 'jurisdiction', 'rationale', 'severity', 'recommended_action') # this can probably be automated somehow
+    crsr = conn.cursor()
+    for gap in gaps:
+        row = {k: gap[k] for k in allowed_cols if k in gap}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
+        crsr.execute(
+            f"""
+            INSERT INTO gaps ({cols})
+            VALUES ({placeholders})
+            """,
+            gap,
+        )
+    return len(gaps)
+
 def insert_and_link_gaps(gaps: list[dict]) -> int:
-    # TODO: shift pk generation to RDBM, and enable row replacement
     # Each dict: {uid, type, severity, jurisdiction, recommended_action, claim_uid_requirement_uid_trios: [(claim_uid, requirement_uid)]}
     with connect() as conn:
         crsr = conn.cursor()
         for gap in gaps:
             crsr.execute(
                 """
-                INSERT OR REPLACE INTO gaps (
+                INSERT INTO gaps (
                     uid, type, jurisdiction, rationale, severity, recommended_action
                 ) VALUES (
                     :uid, :type, :jurisdiction, :rationale, :severity, :recommended_action

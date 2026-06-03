@@ -18,8 +18,11 @@ from backend_py.clean import clean_ctgov_studies
 from backend_py.ctgov import fetch_all_pages
 # from backend_py.db import init_db, upsert_studies, count, query
 import backend_py.db as db
+import backend_py.gaps as gaps
 
 QUERIES_FILE = Path(__file__).parent / "queries.yaml"
+REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
+CLAIMS_FILE = Path(__file__).parent.parent / "data" / "claims.yaml"
 
 
 def load_presets() -> dict:
@@ -235,14 +238,46 @@ def ingest_tracible_stack() -> None:
 
 def build_traceable_stack() -> None:
     # ingest requirements
-    
+    with open(REQUIREMENTS_FILE) as f:
+        reqs_data = yaml.safe_load(f)
+    requirements = []
+    for uid,fields in reqs_data.items():
+        requirements.append(fields)
+        fields["uid"] = uid
+    db.insert_requirements(requirements)
+
     # build potential gaps, and claims that determine the gaps
+    with open(CLAIMS_FILE) as f:
+        claims_data = yaml.safe_load(f)
+    claims = []
+    for uid,fields in claims_data.items():
+        fields["uid"] = uid
+        claims.append(fields)
+    with db.connect() as conn:
+        db.insert_claims(conn, claims)
+
+    gap_objs = build_gap_objects()
+    for g in gap_objs:
+        g.severity_score
+
+
+    
+
     # ingest sources
     # extract exhaustive set of evidence objects
     # connect evidence objects to support or disprove claims
     # update gap severity
     # build (traceable) report 
-    pass
+
+def build_gap_objects() -> list[gaps.Gap]:
+    gap_list = []
+    gap_list.append(gaps.Gap_001())
+    gap_list.append(gaps.Gap_002())
+    gap_list.append(gaps.Gap_003())
+    gap_list.append(gaps.Gap_004())
+    gap_list.append(gaps.Gap_005())
+    gap_list.append(gaps.Gap_006())
+    return gap_list
 
 if __name__ == "__main__":
     presets = load_presets()
