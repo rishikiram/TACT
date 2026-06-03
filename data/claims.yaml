@@ -20,6 +20,10 @@ CLAIM-011:
   statement: Patient Reported Outcomes support Quality of Life improvements.
 CLAIM-005:
   statement: VER-101 addresses unmet need in a biomarker-defined NSCLC population.
+CLAIM-014:
+  statement: VER-101 biomarker testing pathway is well defined.
+CLAIM-015:
+  statement: VER-101 has rigorous statistically analysis subgroups.
 CLAIM-012:
   statement: VER-101 did not produce excessive adverse events.
 CLAIM-013:

@@ -4,6 +4,7 @@ import backend_py.db as db
 GAP_SEVERITY_ENUM = db.GAP_SEVERITY_ENUM
 CLAIM_STATUS_ENUM = db.CLAIM_STATUS_ENUM
 assert (GAP_SEVERITY_ENUM == ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding"))
+assert (CLAIM_STATUS_ENUM[-1] == "supported")
 
 @dataclass
 class Gap:
@@ -230,21 +231,26 @@ class Gap_006(Gap):
         self.claim_uids = [self.biomkr_effective_claim, self.biomrk_testing_path_claim, self.subgroup_claim]
 
     def severity_score(self) -> tuple:
-        score = 2 # GAP_SEVERITY_ENUM[4] == supported
+        score = 1 # GAP_SEVERITY_ENUM[-1] == supported
         new_rationale = []
         if self.get_claim_status(self.biomkr_effective_claim) == CLAIM_STATUS_ENUM[-1]:
-            score += 2
+            score += 1
             new_rationale += [self.get_claim_statement(self.biomkr_effective_claim)] # this can be done by the relational database w/ reusing the text
         else:
-             new_rationale += ["Biomarker is not well defined"]
-        # TODO
+             new_rationale += ["Relevant and well defined biomarker is not present"]
+
         if self.get_claim_status(self.biomrk_testing_path_claim) == CLAIM_STATUS_ENUM[-1]:
-            score += 2
+            score += 1
             new_rationale += [self.get_claim_statement(self.biomrk_testing_path_claim)] # this can be done by the relational database w/ reusing the text
         else:
-             new_rationale += ["Biomarker is not well defined"]
+             new_rationale += ["Biomarker testing pathway is not defined"]
+
+        if self.get_claim_status(self.subgroup_claim) == CLAIM_STATUS_ENUM[-1]:
+            score += 1
+            new_rationale += [self.get_claim_statement(self.subgroup_claim)] # this can be done by the relational database w/ reusing the text
+        else:
+             new_rationale += ["Subgroups are not rigorously analyzed"]
+
         score = min(5, score)
-        if len(new_rationale) == 0:
-                new_rationale += ["Biomarker is either not included, not well defined, or not useful."]
 
         return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale))
