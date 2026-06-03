@@ -104,7 +104,7 @@ def ingest_tracible_stack_test() -> None:
             "uid": "CLAIM-002",
             "statement": "VER-101 improves progression-free survival versus current standard of care.",
             "support_status": "unsupported",
-            "review_status": "needs_review"
+            "review_status": "needs_review",
             "risk_note": "No randomized comparator and no comparative PFS estimate.",
             "evidence_object_uids": ["EO-003"] #,5]
         }
@@ -235,6 +235,7 @@ def ingest_tracible_stack() -> None:
 
 def build_traceable_stack() -> None:
     # ingest requirements
+    
     # build potential gaps, and claims that determine the gaps
     # ingest sources
     # extract exhaustive set of evidence objects

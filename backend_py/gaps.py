@@ -72,29 +72,29 @@ class Gap_001(Gap):
 
     def severity_score(self) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[4] == supported
-        new_rationale = ""
+        new_rationale = []
         # If standard-of-care comparator is present
-        if not (self.get_claim_status(self.SOC_comparator_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(self.SOC_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 2
-            new_rationale += "Standard of Care comparator is present; "
+            new_rationale += ["Standard of Care comparator is present"]
 
-        if not (self.get_claim_status(self.placebo_comparator_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(self.placebo_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += "Placebo comparator is present; "
+            new_rationale += ["Placebo comparator is present"]
 
-        if not (self.get_claim_status(self.direct_comparator_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(self.direct_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += "Direct comparator is present; "
+            new_rationale += ["Direct comparator is present"]
 
-        if not (self.get_claim_status(self.indirect_comparator_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(self.indirect_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += "Indirect comparator is present; "
+            new_rationale += ["Indirect comparator is present"]
 
         score = min(5, score)
         if len(new_rationale) == 0:
                 new_rationale = "no randomized comparator"
                 
-        return (GAP_SEVERITY_ENUM[score], new_rationale)
+        return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale)+".")
 
 @dataclass
 class Gap_002(Gap):
@@ -235,22 +235,22 @@ class Gap_006(Gap):
         new_rationale = []
         if self.get_claim_status(self.biomkr_effective_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += [self.get_claim_statement(self.biomkr_effective_claim)] # this can be done by the relational database w/ reusing the text
+            new_rationale += ["VER-101 addresses unmet need in a biomarker-defined NSCLC population."] # this can be done by the relational database w/ reusing the text
         else:
-             new_rationale += ["Relevant and well defined biomarker is not present"]
+                new_rationale += ["Relevant and well defined biomarker is not present"]
 
         if self.get_claim_status(self.biomrk_testing_path_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += [self.get_claim_statement(self.biomrk_testing_path_claim)] # this can be done by the relational database w/ reusing the text
+            new_rationale += ["VER-101 biomarker testing pathway is well defined."] # this can be done by the relational database w/ reusing the text
         else:
-             new_rationale += ["Biomarker testing pathway is not defined"]
+                new_rationale += ["Biomarker testing pathway is not defined"]
 
         if self.get_claim_status(self.subgroup_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
-            new_rationale += [self.get_claim_statement(self.subgroup_claim)] # this can be done by the relational database w/ reusing the text
+            new_rationale += ["VER-101 has rigorous statistically analysis subgroups."] # this can be done by the relational database w/ reusing the text
         else:
-             new_rationale += ["Subgroups are not rigorously analyzed"]
+                new_rationale += ["Subgroups are not rigorously analyzed"]
 
         score = min(5, score)
-
+        # GAP_SEVERITY_ENUM = ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding"))
         return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale))
