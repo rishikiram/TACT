@@ -84,7 +84,7 @@ CLAIM-012:
 
 # ECONOMIC VIABILITY
 CLAIM-013:
-  statement: "Budget, eligible population, and resource use have been considered for economic viability."
+  statement: "An economic model or cost assesment has been developed"
   requirements:
     - REQ-NICE-ECON-001
     - REQ-US-ECON-001
