@@ -131,14 +131,6 @@ class Gap_002(Gap):
 
         return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale))
     
-"""
-QoL/PRO evidence gap
-Medium-high
-NICE/England 
-REQ-NICE-QOL-001 
-EO-007: PRO exploratory/incomplete
-Define prospective PRO strategy and responder analysis.
-"""
 @dataclass
 class Gap_003(Gap):
     uid: str = "GAP-003"

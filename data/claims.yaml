@@ -1,90 +1,26 @@
-# COMPARATORS
 CLAIM-006:
-  statement: "VER-101 gives better outcomes than standard-of-care comparator"
-  requirements:
-    - REQ-NICE-COMP-001
-    - REQ-US-COMP-001
-    - REQ-NICE-ECON-001
+  statement: VER-101 gives better outcomes than standard-of-care comparator
 CLAIM-007:
-  statement: "VER-101 gives better outcomes than direct comparator"
-  requirements:
-    - REQ-NICE-COMP-001
-    - REQ-US-COMP-001
-    - REQ-NICE-ECON-001
+  statement: VER-101 gives better outcomes than direct comparator
 CLAIM-008:
-  statement: "VER-101 gives better outcomes than placebo comparator"
-  requirements:
-    - REQ-NICE-COMP-001
-    - REQ-US-COMP-001
-    - REQ-NICE-ECON-001
+  statement: VER-101 gives better outcomes than placebo comparator
 CLAIM-009:
-  statement: "VER-101 gives better outcomes than indirect comparator"
-  requirements:
-    - REQ-NICE-COMP-001
-    - REQ-US-COMP-001
-    - REQ-NICE-ECON-001
-
-# ENDPOINTS
+  statement: VER-101 gives better outcomes than indirect comparator
 CLAIM-001:
-  statement: "VER-101 demonstrates clinically meaningful tumor response in 2L KRAS G12C-positive metastatic NSCLC."
-  requirements:
-    - REQ-NICE-ENDPT-001
-    - REQ-US-ENDPT-001
-# Partially supported EO-004  Single-arm ORR supports observed response but not comparative access claims.
+  statement: VER-101 demonstrates clinically meaningful tumor response in 2L KRAS G12C-positive metastatic NSCLC.
 CLAIM-002:
-  statement: "VER-101 improves progression-free survival versus current standard of care."
-  requirements:
-    - REQ-NICE-ENDPT-001
-    - REQ-US-ENDPT-001
-    - REQ-NICE-ECON-001
-# Unsupported  EO-003, EO-005  No randomized comparator and no comparative PFS estimate.
+  statement: VER-101 improves progression-free survival versus current standard of care.
 CLAIM-010:
-  statement: "VER-101 improves overall survival."
-  requirements:
-    - REQ-NICE-ENDPT-001
-    - REQ-US-ENDPT-001
-    - REQ-NICE-ECON-001
-
-# QoL and PRO
+  statement: VER-101 improves overall survival.
 CLAIM-003:
-  statement: "VER-101 offers manageable safety and oral convenience."
-  requirements:
-    - REQ-NICE-QOL-001
-    - REQ-NICE-SAFTEY-001
-    - REQ-US-QOL-001
-# Partially supported EO-008; SRC-001 Early safety and oral modality support a cautious statement, but comparative safety is unknown.
+  statement: VER-101 offers manageable safety and oral convenience.
 CLAIM-004:
-  statement: "VER-101 improves patient quality of life." 
-  requirements:
-    - REQ-NICE-QOL-001
-    - REQ-US-QOL-001
-    - REQ-NICE-ECON-001
+  statement: VER-101 improves patient quality of life.
 CLAIM-011:
-  statement: "Patient Reported Outcomes support Quality of Life improvements." 
-  requirements:
-    - REQ-NICE-QOL-001
-    - REQ-US-QOL-001
-    - REQ-NICE-ECON-001
-# Unsupported EO-007 PROs are exploratory, incomplete, and not sufficient for a strong QoL improvement claim."
-
-# BIOMARKER and POPULATION
+  statement: Patient Reported Outcomes support Quality of Life improvements.
 CLAIM-005:
-  statement: "VER-101 addresses unmet need in a biomarker-defined NSCLC population."
-  requirements:
-    - REQ-US-BIOMARKER-001
-    - REQ-NICE-POP-001
-# Partially supported EO-002, EO-009 Population is defined, but testing pathway and comparative positioning remain uncertain.
-
-# SAFTEY
+  statement: VER-101 addresses unmet need in a biomarker-defined NSCLC population.
 CLAIM-012:
-  statement: "VER-101 did not produce excessive adverse events."
-  requirements:
-    - REQ-NICE-SAFTEY-001
-    - REQ-NICE-ECON-001
-
-# ECONOMIC VIABILITY
+  statement: VER-101 did not produce excessive adverse events.
 CLAIM-013:
-  statement: "Budget, eligible population, and resource use have been considered for economic viability."
-  requirements:
-    - REQ-NICE-ECON-001
-    - REQ-US-ECON-001
+  statement: Budget, eligible population, and resource use have been considered for economic viability.
