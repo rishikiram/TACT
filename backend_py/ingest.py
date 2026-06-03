@@ -233,6 +233,15 @@ def ingest_tracible_stack() -> None:
         f"Gaps inserted: {gaps_after - gaps_before}"
     )
 
+def build_traceable_stack() -> None:
+    # ingest requirements
+    # build potential gaps, and claims that determine the gaps
+    # ingest sources
+    # extract exhaustive set of evidence objects
+    # connect evidence objects to support or disprove claims
+    # update gap severity
+    # build (traceable) report 
+    pass
 
 if __name__ == "__main__":
     presets = load_presets()
