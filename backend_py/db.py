@@ -69,8 +69,8 @@ CREATE TABLE claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
-    support_status          TEXT CHECK (status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[1]}',
-    review_status           TEXT CHEKC (status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
+    support_status          TEXT CHECK (support_status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[1]}',
+    review_status           TEXT CHECK (review_status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
     risk_note               TEXT
 );
 
@@ -79,18 +79,19 @@ CREATE TABLE requirements (
     uid                     STRING UNIQUE,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
-    requirement_text        TEXT,
-    potential_gaps          TEXT  -- JSON array for now
+    requirement_text        TEXT
+    -- potential_gaps       TEXT  -- TODO, all gaps are manually created so tracking potential gaps doesn't help anything. 
 );
 
 CREATE TABLE gaps (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
-    type                    TEXT,
-    jurisdiction            TEXT,
+    requirement_id          INTEGER,
     rationale               TEXT,
     severity                TEXT CHECK (severity in ({allowed_gaps})),
-    recommended_action      TEXT
+    recommended_action      TEXT,
+    FOREIGN KEY (requirement_id)
+        REFERENCES requirements(id)
 );
 """
 
@@ -117,16 +118,13 @@ CREATE TABLE claim_evidence_objects (
         REFERENCES evidence_objects(id)
 );
 
--- Many-to-many-to-many claims and requirements to gaps
-CREATE TABLE requirement_claim_gaps (
+-- Many-to-many-to-many claims to gaps
+CREATE TABLE gap_claims (
     claim_id                INTEGER,
-    requirement_id          INTEGER,
     gap_id                  INTEGER,
-    PRIMARY KEY (claim_id, requirement_id, gap_id),
+    PRIMARY KEY (claim_id, gap_id),
     FOREIGN KEY (claim_id)
         REFERENCES claims(id),
-    FOREIGN KEY (requirement_id)
-        REFERENCES requirements(id),
     FOREIGN KEY (gap_id)
         REFERENCES gaps(id)
 );
@@ -253,7 +251,7 @@ def insert_claims(conn, claims: list[dict]) -> int:
             INSERT INTO claims ({cols})
             VALUES ({placeholders})
             """,
-            claim,
+            row,
         )
     return len(claims)
 
@@ -276,30 +274,34 @@ def insert_and_link_claims(claims: list[dict]) -> int:
                 )
     return len(claims)
 
-def insert_requirements(requirements: list[dict]) -> int:
+def insert_requirements(conn, requirements: list[dict]) -> int:
     # TODO: shift pk generation to RDBM, and enable row replacement
     # Each dict: {uid, jurisdiction, domain, requirement_text}
-    with connect() as conn:
-        crsr = conn.cursor()
-        for req in requirements:
-            crsr.execute(
-                """
-                INSERT OR REPLACE INTO requirements (
-                    uid, jurisdiction, domain, requirement_text, potential_gaps
-                ) VALUES (
-                    :uid, :jurisdiction, :domain, :requirement_text, :potential_gaps
-                )
-                """,
-                req,
-            )
-        # conn.commit()
+    allowed_cols = [col_dict["name"] for col_dict in get_table_columns(conn, "requirements")]
+    crsr = conn.cursor()
+    for req in requirements:
+        row = {k: req[k] for k in allowed_cols if k in req}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
+        crsr.execute(
+            f"""
+            INSERT INTO requirements ({cols})
+            VALUES ({placeholders})
+            """,
+            row,
+        )
     return len(requirements)
 
-def insert_gaps(conn, gaps: list[dict]) -> int:
-    allowed_cols = 'uid', 'type', 'jurisdiction', 'rationale', 'severity', 'recommended_action') # this can probably be automated somehow
+def insert_and_link_gaps(conn, gaps: list[dict]) -> int:
+    # allowed_cols = ('uid', 'type', 'jurisdiction', 'rationale', 'severity', 'recommended_action')
+    allowed_cols = [col_dict["name"] for col_dict in get_table_columns(conn, "gaps")]
     crsr = conn.cursor()
     for gap in gaps:
         row = {k: gap[k] for k in allowed_cols if k in gap}
+
+        if "requirement_uid" in gap:
+            row["requirement_id"] = get_id(conn, "requirements", gap["requirement_uid"])
+
         cols = ", ".join(row.keys())
         placeholders = ", ".join(f":{k}" for k in row.keys())
         crsr.execute(
@@ -307,38 +309,39 @@ def insert_gaps(conn, gaps: list[dict]) -> int:
             INSERT INTO gaps ({cols})
             VALUES ({placeholders})
             """,
-            gap,
+            row,
         )
-    return len(gaps)
-
-def insert_and_link_gaps(gaps: list[dict]) -> int:
-    # Each dict: {uid, type, severity, jurisdiction, recommended_action, claim_uid_requirement_uid_trios: [(claim_uid, requirement_uid)]}
-    with connect() as conn:
-        crsr = conn.cursor()
-        for gap in gaps:
+        
+        for claim_uid in gap["claim_uids"]:
+            claim_id = get_id(conn, "claims", claim_uid)
+            gap_id = get_id(conn, "gaps", gap["uid"])
             crsr.execute(
                 """
-                INSERT INTO gaps (
-                    uid, type, jurisdiction, rationale, severity, recommended_action
-                ) VALUES (
-                    :uid, :type, :jurisdiction, :rationale, :severity, :recommended_action
-                )
+                INSERT OR IGNORE INTO gap_claims (
+                    claim_id, gap_id
+                ) VALUES (?, ?)
                 """,
-                gap,
+                (claim_id, gap_id),
             )
-            gap_id = get_id(conn, "gaps", gap["uid"])
-            for (claim_uid,requirement_uid) in gap.get("claim_uid_requirement_uid_trios", []):
-                claim_id = get_id(conn, "claims", claim_uid)
-                requirement_id = get_id(conn, "requirements", requirement_uid)
-                crsr.execute(
-                    """
-                    INSERT OR IGNORE INTO requirement_claim_gaps (
-                        claim_id, requirement_id, gap_id
-                    ) VALUES (?, ?, ?)
-                    """,
-                    (claim_id, requirement_id, gap_id),
-                )
     return len(gaps)
+
+def update_gap(conn, gap) -> None:
+    allowed_cols = [col_dict["name"] for col_dict in get_table_columns(conn, "gaps")]
+    crsr = conn.cursor()
+    row = {k: gap[k] for k in allowed_cols if k in gap}
+
+    if "requirement_uid" in gap:
+        row["requirement_id"] = get_id(conn, "requirements", gap["requirement_uid"])
+
+    cols = ", ".join(row.keys())
+    placeholders = ", ".join(f":{k}" for k in row.keys())
+    crsr.execute(
+        f"""
+        UPDATE gaps SET ({cols})
+        VALUES ({placeholders})
+        """,
+        row,
+    )
 
 def query(sql: str, params: tuple = (), conn = connect()) -> list[sqlite3.Row]:
     cursor = conn.cursor()

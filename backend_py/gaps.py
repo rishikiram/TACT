@@ -6,50 +6,33 @@ CLAIM_STATUS_ENUM = db.CLAIM_STATUS_ENUM
 assert (GAP_SEVERITY_ENUM == ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding"))
 assert (CLAIM_STATUS_ENUM[-1] == "supported")
 
+
+
 @dataclass
 class Gap:
     # User Input
     uid: str 
-    requirement_uid: str
-    # Pulled from Database
-    type: str = "NOT SET, something is wrong"
-    jurisdiction: str = "NOT SET, something is wrong"
+    requirement_uid: str 
     # Set by Class Functions
     rationale: str = "NOT SET, something is wrong"
     recommended_action: str = "NOT SET, something is wrong"
     # defaults
     review_status: str = "unreviewed"
     severity: str = GAP_SEVERITY_ENUM[0] # == unknown (default?)
-    claim_uids: list[str] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.jurisdiction = self.get_jurisdiction()
-        self.type = self.get_type()
+    claim_uids: list[str] = field(default_factory=list) # no links
 
     def severity_score(self, conn) -> tuple:
         raise NotImplementedError
-    
     def set_severity_and_rationale(self, conn) -> None:
          self.severity, self.rationale = self.severity_score(conn)
 
+    def get_claim_status(self, conn, claim_uid) -> str:
+        return db.query("SELECT support_status FROM claims WHERE uid = ?", params=(claim_uid,), conn=conn)[0][0]
+    def get_claim_statement(self, conn, claim_uid) -> str:
+        return db.query("SELECT statement FROM claims WHERE uid = ?", params=(claim_uid,), conn=conn)[0][0]
+    
     def to_dict(self) -> dict:
         return asdict(self)
-
-    def get_claim_status(self, conn, claim_uid) -> str:
-         return "TODO: implement get_claim_status"
-    def get_claim_statement(self, conn, claim_uid) -> str:
-        return "TODO: implement get_claim_statement"
-    
-    def get_type(self, req_uid = None) -> str:
-        if req_uid is None:
-            req_uid = self.requirement_uid
-        return "TODO: need to implement get_type"
-    def get_jurisdiction(self, req_uid = None) -> str:
-        if req_uid is None:
-            req_uid = self.requirement_uid
-        return "TODO: need to implement get_jusridiction"
-
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(uid={self.uid}, severity={self.severity})"
 
@@ -58,11 +41,9 @@ class Gap:
 class Gap_001(Gap):
     uid: str = "GAP-001"
     requirement_uid: str = "REQ-NICE-COMP-001"
-    type: str = "Comparator uncertainty"
-    jurisdiction: str = "NICE/England"
-    # severity = "big"
-    rationale: str = "no randomized comparator"
-    recommended_action: str = "Assess indirect comparison feasibility and RWE augmentation plan"
+
+    # rationale: str = "no randomized comparator"
+    # recommended_action: str = "Assess indirect comparison feasibility and RWE augmentation plan"
 
     SOC_comparator_claim: str = "CLAIM-006"
     direct_comparator_claim: str = "CLAIM-007"
@@ -70,7 +51,6 @@ class Gap_001(Gap):
     indirect_comparator_claim: str = "CLAIM-009"
 
     def __post_init__(self):
-        # super().__post_init__() TODO use parent auto set funcs
         self.claim_uids = [self.SOC_comparator_claim, self.direct_comparator_claim, self.placebo_comparator_claim, self.indirect_comparator_claim]
 
     def severity_score(self, conn) -> tuple:
@@ -95,40 +75,37 @@ class Gap_001(Gap):
 
         score = min(5, score)
         if len(new_rationale) == 0:
-                new_rationale = "no randomized comparator"
+                new_rationale = ["no randomized comparator"]
 
         return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale)+".")
 
 @dataclass
 class Gap_002(Gap):
     uid: str = "GAP-002"
-    type: str = "endpoint maturity"
-    jurisdiction: str = "U.S. payer archetype"
-    # severity = "big"
-    rationale: str = "EO-006: OS immature; EO-004: ORR primary"
-    recommended_action: str = "Track longer follow-up; define durability evidence plan."
     requirement_uid: str = "REQ-US-ENDPT-001"
+
+    # rationale: str = "EO-006: OS immature; EO-004: ORR primary"
+    # recommended_action: str = "Track longer follow-up; define durability evidence plan."
     
     orr_claim: str = "CLAIM-001"
     pfs_claim: str = "CLAIM-002"
     os_claim: str = "CLAIM-010"
 
     def __post_init__(self):
-        # super().__post_init__() TODO use parent autoset funcs
         self.claim_uids = [self.orr_claim, self.pfs_claim, self.os_claim]
 
     def severity_score(self, conn) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
-        if not (self.get_claim_status(conn, self.os_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(conn, self.os_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 3
             new_rationale += ["Overall Survival is shown"]
 
-        if not (self.get_claim_status(conn, self.pfs_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(conn, self.pfs_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 2
             new_rationale += ["Significant progression free survival is shown"]
 
-        if not (self.get_claim_status(conn, self.orr_claim) == CLAIM_STATUS_ENUM[-1]):
+        if self.get_claim_status(conn, self.orr_claim) == CLAIM_STATUS_ENUM[-1]:
             score += 1
             new_rationale += ["A meaningful tumor response is shown"]
 
@@ -148,7 +125,6 @@ class Gap_003(Gap):
     safety_and_convenience_claim: str = "CLAIM-004"
 
     def __post_init__(self):
-        super().__post_init__()
         self.claim_uids = [self.QoL_claim, self.PRO_claim, self.safety_and_convenience_claim]
 
     def severity_score(self, conn) -> tuple:
@@ -174,13 +150,12 @@ class Gap_003(Gap):
 
 @dataclass
 class Gap_004(Gap):
-    uid: str = "GAP-003"
+    uid: str = "GAP-004"
     requirement_uid: str = "REQ-NICE-ECON-001"
     
     econ_model_claim: str = "CLAIM-013"
 
     def __post_init__(self):
-        super().__post_init__()
         self.claim_uids = [self.econ_model_claim]
 
     def severity_score(self, conn) -> tuple:
@@ -198,13 +173,12 @@ class Gap_004(Gap):
 
 @dataclass
 class Gap_005(Gap):
-    uid: str = "GAP-003"
+    uid: str = "GAP-005"
     requirement_uid: str = "REQ-US-BIOMARKER-001"
     
     biomkr_claim: str = "CLAIM-005"
 
     def __post_init__(self):
-        super().__post_init__()
         self.claim_uids = [self.biomkr_claim]
 
     def severity_score(self, conn) -> tuple:
@@ -222,7 +196,7 @@ class Gap_005(Gap):
 
 @dataclass
 class Gap_006(Gap):
-    uid: str = "GAP-003"
+    uid: str = "GAP-006"
     requirement_uid: str = "REQ-US-BIOMARKER-001"
     
     biomkr_effective_claim: str = "CLAIM-005"
@@ -230,7 +204,6 @@ class Gap_006(Gap):
     subgroup_claim: str = "CLAIM-015"
 
     def __post_init__(self):
-        super().__post_init__()
         self.claim_uids = [self.biomkr_effective_claim, self.biomrk_testing_path_claim, self.subgroup_claim]
 
     def severity_score(self, conn) -> tuple:
@@ -257,3 +230,8 @@ class Gap_006(Gap):
         score = min(5, score)
         # GAP_SEVERITY_ENUM = ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding"))
         return (GAP_SEVERITY_ENUM[score], "; ".join(new_rationale))
+
+GAP_REGISTRY: dict[str, type[Gap]] = {
+    cls.__dataclass_fields__['uid'].default: cls
+    for cls in Gap.__subclasses__()
+}

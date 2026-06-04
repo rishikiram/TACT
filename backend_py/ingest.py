@@ -16,9 +16,8 @@ import json
 
 from backend_py.clean import clean_ctgov_studies
 from backend_py.ctgov import fetch_all_pages
-# from backend_py.db import init_db, upsert_studies, count, query
 import backend_py.db as db
-import backend_py.gaps as gaps
+import backend_py.gaps as Gaps
 
 QUERIES_FILE = Path(__file__).parent / "queries.yaml"
 REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
@@ -80,61 +79,61 @@ def ingest_tracible_stack_test() -> None:
     requirements_before = db.query("SELECT COUNT(*) FROM requirements")[0][0]
     gaps_before = db.query("SELECT COUNT(*) FROM gaps")[0][0]
 
-    target_evidence_types = ["design", "population", "endpoints", "comparator status"]
-    db.insert_sources([
-        {
-            "uid": "SRC-002", 
-            "type": "simulated internal document", 
-            "title": "VER-101 Phase II protocol synopsis",
-            "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
-            "target_evidence_types": json.dumps(target_evidence_types)
-        }
-    ])
+    with db.connect() as conn:
+        target_evidence_types = ["design", "population", "endpoints", "comparator status"]
+        db.insert_sources([
+            {
+                "uid": "SRC-002", 
+                "type": "simulated internal document", 
+                "title": "VER-101 Phase II protocol synopsis",
+                "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
+                "target_evidence_types": json.dumps(target_evidence_types)
+            }
+        ])
 
-    db.insert_and_link_EOs([
-        {
-            "uid": "EO-003",
-            "type": "comparator", 
-            "statement": "No randomized comparator arm is included", 
-            "normalized_value": "No head-to-head comparator",
-            "confidence":  "high",
-            "source_uids": ["SRC-002"]
-        }
-    ])
+        db.insert_and_link_EOs([
+            {
+                "uid": "EO-003",
+                "type": "comparator", 
+                "statement": "No randomized comparator arm is included", 
+                "normalized_value": "No head-to-head comparator",
+                "confidence":  "high",
+                "source_uids": ["SRC-002"]
+            }
+        ])
 
-    db.insert_and_link_claims([
-        {
-            "uid": "CLAIM-002",
-            "statement": "VER-101 improves progression-free survival versus current standard of care.",
-            "support_status": "unsupported",
-            "review_status": "needs_review",
-            "risk_note": "No randomized comparator and no comparative PFS estimate.",
-            "evidence_object_uids": ["EO-003"] #,5]
-        }
-    ])
+        db.insert_and_link_claims([
+            {
+                "uid": "CLAIM-002",
+                "statement": "VER-101 improves progression-free survival versus current standard of care.",
+                "support_status": "unsupported",
+                "review_status": "needs_review",
+                "risk_note": "No randomized comparator and no comparative PFS estimate.",
+                "evidence_object_uids": ["EO-003"] #,5]
+            }
+        ])
 
-    potential_gaps = ["comparator uncertainty"]
-    db.insert_requirements([
-        {
-            "uid": "REQ-NICE-001",
-            "jurisdiction": "NICE/England",
-            "domain": "comparator",
-            "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
-            "potential_gaps": json.dumps(potential_gaps)
-        }
-    ])
-
-    db.insert_and_link_gaps([
-        {
-            "uid": "GAP-001",
-            "type": "comparator uncertainty",
-            "severity": "high",
-            "jurisdiction": "NICE/England",
-            "rationale": "no randomized comparator",
-            "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
-            "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
-        }
-    ])
+        potential_gaps = ["comparator uncertainty"]
+        db.insert_requirements(conn, [
+            {
+                "uid": "REQ-NICE-001",
+                "jurisdiction": "NICE/England",
+                "domain": "comparator",
+                "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
+                "potential_gaps": json.dumps(potential_gaps)
+            }
+        ])
+        db.insert_and_link_gaps(conn, [
+            {
+                "uid": "GAP-001",
+                "type": "comparator uncertainty",
+                "severity": "high",
+                "jurisdiction": "NICE/England",
+                "rationale": "no randomized comparator",
+                "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
+                "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
+            }
+        ])
 
     sources_after = db.query("SELECT COUNT(*) FROM sources")[0][0]
     EOs_after = db.query("SELECT COUNT(*) FROM evidence_objects")[0][0]
@@ -161,64 +160,65 @@ def ingest_tracible_stack() -> None:
     requirements_before = db.query("SELECT COUNT(*) FROM requirements")[0][0]
     gaps_before = db.query("SELECT COUNT(*) FROM gaps")[0][0]
 
-    target_evidence_types = ["design", "population", "endpoints", "comparator status"]
-    db.insert_sources([
-        {
-            "uid": "SRC-002", 
-            "type": "simulated internal document", 
-            "title": "VER-101 Phase II protocol synopsis",
-            "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
-            "target_evidence_types": json.dumps(target_evidence_types)
-        }
-    ])
+    with db.connect() as conn:
+        target_evidence_types = ["design", "population", "endpoints", "comparator status"]
+        db.insert_sources([
+            {
+                "uid": "SRC-002", 
+                "type": "simulated internal document", 
+                "title": "VER-101 Phase II protocol synopsis",
+                "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
+                "target_evidence_types": json.dumps(target_evidence_types)
+            }
+        ])
 
-    db.insert_and_link_EOs([
-        {
-            "uid": "EO-003",
-            "type": "comparator", 
-            "statement": "No randomized comparator arm is included", 
-            "normalized_value": "No head-to-head comparator",
-            "confidence":  "high",
-            "source_uids": ["SRC-002"]
-        }
-    ])
-    
-    claims_yaml = Path(__file__).parent.parent / "data" / "claims.yaml"
-    with open(claims_yaml) as f:
-        data = yaml.safe_load(f)
-    claims = []
-    for column_name, ann in data.items():
-        claims.append({
-            "uid": column_name,
-            "statement": ann.get("statement"),
-            "support_status": "unsupported",
-            "review_status": "needs_review",
-            "risk_note": "need note"
-        })
-    db.insert_claims(db.connect(), claims)
+        db.insert_and_link_EOs([
+            {
+                "uid": "EO-003",
+                "type": "comparator", 
+                "statement": "No randomized comparator arm is included", 
+                "normalized_value": "No head-to-head comparator",
+                "confidence":  "high",
+                "source_uids": ["SRC-002"]
+            }
+        ])
+        
+        claims_yaml = Path(__file__).parent.parent / "data" / "claims.yaml"
+        with open(claims_yaml) as f:
+            data = yaml.safe_load(f)
+        claims = []
+        for column_name, ann in data.items():
+            claims.append({
+                "uid": column_name,
+                "statement": ann.get("statement"),
+                "support_status": "unsupported",
+                "review_status": "needs_review",
+                "risk_note": "need note"
+            })
+        db.insert_claims(conn, claims)
 
-    potential_gaps = ["comparator uncertainty"]
-    db.insert_requirements([
-        {
-            "uid": "REQ-NICE-001",
-            "jurisdiction": "NICE/England",
-            "domain": "comparator",
-            "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
-            "potential_gaps": json.dumps(potential_gaps)
-        }
-    ])
+        potential_gaps = ["comparator uncertainty"]
+        db.insert_requirements(conn, [
+            {
+                "uid": "REQ-NICE-001",
+                "jurisdiction": "NICE/England",
+                "domain": "comparator",
+                "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
+                "potential_gaps": json.dumps(potential_gaps)
+            }
+        ])
 
-    db.insert_and_link_gaps([
-        {
-            "uid": "GAP-001",
-            "type": "comparator uncertainty",
-            "severity": "high",
-            "jurisdiction": "NICE/England",
-            "rationale": "no randomized comparator",
-            "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
-            "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
-        }
-    ])
+        db.insert_and_link_gaps(conn, [
+            {
+                "uid": "GAP-001",
+                "type": "comparator uncertainty",
+                "severity": "high",
+                "jurisdiction": "NICE/England",
+                "rationale": "no randomized comparator",
+                "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
+                "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
+            }
+        ])
 
     sources_after = db.query("SELECT COUNT(*) FROM sources")[0][0]
     EOs_after = db.query("SELECT COUNT(*) FROM evidence_objects")[0][0]
@@ -237,28 +237,36 @@ def ingest_tracible_stack() -> None:
     )
 
 def build_traceable_stack() -> None:
-    # ingest requirements
-    with open(REQUIREMENTS_FILE) as f:
-        reqs_data = yaml.safe_load(f)
-    requirements = []
-    for uid,fields in reqs_data.items():
-        requirements.append(fields)
-        fields["uid"] = uid
-    db.insert_requirements(requirements)
+    db.init_db()
 
-    # build potential gaps, and claims that determine the gaps
-    with open(CLAIMS_FILE) as f:
-        claims_data = yaml.safe_load(f)
-    claims = []
-    for uid,fields in claims_data.items():
-        fields["uid"] = uid
-        claims.append(fields)
     with db.connect() as conn:
+        # ingest requirements
+        with open(REQUIREMENTS_FILE) as f:
+            reqs_data = yaml.safe_load(f)
+        requirements = []
+        for uid,fields in reqs_data.items():
+            requirements.append(fields)
+            fields["uid"] = uid
+        db.insert_requirements(conn, requirements)
+
+        # build potential gaps, and claims that determine the gaps
+        with open(CLAIMS_FILE) as f:
+            claims_data = yaml.safe_load(f)
+        claims = []
+        for uid,fields in claims_data.items():
+            fields["uid"] = uid
+            claims.append(fields)
+        claims.sort(key=lambda f: f["uid"])
         db.insert_claims(conn, claims)
 
-    gap_objs = build_gap_objects()
-    for g in gap_objs:
-        g.severity_score
+        gap_objs = build_gap_objects()
+        gaps = []
+        for g in gap_objs:
+            g.set_severity_and_rationale(conn)
+            gaps.append(g.to_dict())
+        db.insert_and_link_gaps(conn, gaps)
+
+        update_claim_status(conn, "CLAIM-006")
 
 
     
@@ -269,15 +277,32 @@ def build_traceable_stack() -> None:
     # update gap severity
     # build (traceable) report 
 
-def build_gap_objects() -> list[gaps.Gap]:
+def build_gap_objects() -> list[Gaps.Gap]:
     gap_list = []
-    gap_list.append(gaps.Gap_001())
-    gap_list.append(gaps.Gap_002())
-    gap_list.append(gaps.Gap_003())
-    gap_list.append(gaps.Gap_004())
-    gap_list.append(gaps.Gap_005())
-    gap_list.append(gaps.Gap_006())
+    gap_list.append(Gaps.Gap_001())
+    gap_list.append(Gaps.Gap_002())
+    gap_list.append(Gaps.Gap_003())
+    gap_list.append(Gaps.Gap_004())
+    gap_list.append(Gaps.Gap_005())
+    gap_list.append(Gaps.Gap_006())
     return gap_list
+
+def update_claim_status(conn, claim_uid, support_status="supported") -> None:
+    cursor = conn.cursor()
+    cursor.execute("UPDATE claims SET support_status = ? WHERE uid = ?", (support_status, claim_uid))
+    q = """
+    SELECT gaps.uid
+    FROM gaps
+    JOIN gap_claims ON gaps.id = gap_claims.gap_id
+    JOIN claims ON claims.id = gap_claims.claim_id
+    WHERE claims.uid = ?
+    """
+    cursor.execute(q, (claim_uid,))
+    gap_uids = list(cursor.fetchall()[0])
+
+    for gap_uid in gap_uids:
+        gap_obj = Gaps.GAP_REGISTRY[gap_uid]() # type: ignore
+        gap_obj.
 
 if __name__ == "__main__":
     presets = load_presets()
