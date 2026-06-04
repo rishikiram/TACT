@@ -69,7 +69,7 @@ CREATE TABLE claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
-    support_status          TEXT CHECK (support_status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[1]}',
+    support_status          TEXT CHECK (support_status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[0]}',
     review_status           TEXT CHECK (review_status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
     risk_note               TEXT
 );
