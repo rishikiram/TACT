@@ -5,16 +5,7 @@ import { TrialTable } from "../components/TrialTable";
 import { UsStatesMap } from "../components/maps/UsStatesMap";
 import { HeatMap } from "../components/maps/HeatMap";
 import { ScatterMap } from "../components/maps/ScatterMap";
-import { ONCOLOGY, NSCLC, NSCLC_v2, NSCLC_ADENOCARCINOMA, RECRUITING_DIABETES } from "../api/queries";
-import type { FetchTrialsParams } from "../api/trials";
-
-const PRESETS: { label: string; params: FetchTrialsParams }[] = [
-  { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
-  { label: "NSCLC_v2", params: NSCLC_v2 },
-  { label: "NSCLC", params: NSCLC },
-  { label: "Oncology", params: ONCOLOGY },
-  { label: "Recruiting Diabetes (Phase 2)", params: RECRUITING_DIABETES },
-];
+import { PRESETS } from "../api/queries";
 
 const MAPS = ["Choropleth", "Heatmap", "Scatter"] as const;
 type MapView = typeof MAPS[number];
