@@ -62,9 +62,9 @@ export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
   intr: "targeted therapy OR precision medicine",
 };
 export const PRESETS: { label: string; params: FetchTrialsParams }[] = [
-  { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
   { label: "NSCLC KRAS G12C", params: NSCLC_KRAS },
-  { label: "NSCLC v2", params: NSCLC_precision },
+  { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
+  { label: "NSCLC Precision", params: NSCLC_precision },
   { label: "NSCLC", params: NSCLC },
   // { label: "Oncology", params: ONCOLOGY },
   // { label: "Recruiting Diabetes (Phase 2)", params: RECRUITING_DIABETES },
