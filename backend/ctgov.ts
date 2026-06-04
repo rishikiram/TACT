@@ -1,7 +1,7 @@
 import type { QueryResult } from "./cache";
 
 export const CT_GOV_BASE = "https://clinicaltrials.gov/api/v2/studies";
-const PAGE_CAP = 20; // max 20,000 studies per request
+const PAGE_CAP = 10; // max 10,000 studies per request
 
 export async function fetchAllPages(baseParams: URLSearchParams): Promise<QueryResult> {
   baseParams.set("pageSize", "1000");

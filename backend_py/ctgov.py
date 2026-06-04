@@ -3,8 +3,11 @@ import time
 import requests
 
 CT_GOV_BASE = "https://clinicaltrials.gov/api/v2/studies"
-PAGE_CAP = 32  # max 32,000 studies per request
+PAGE_CAP = 10  # max 10,000 studies per request
 
+def fetch_all_nctids(params: dict) -> list[dict]:
+    params["fields"] = ",".join(["NCTId", "OverallStatus"])
+    return fetch_all_pages(params)
 
 def fetch_all_pages(params: dict) -> list[dict]:
     """Fetch all paginated results from the CT.gov API for a given query."""

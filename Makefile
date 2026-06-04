@@ -20,7 +20,7 @@ backend-py:
 
 # Ingest data: make ingest PRESET=oncology
 ingest:
-	python -m ingest.py $(PRESET)
+	python -m backend_py.ingest $(PRESET)
 
 # Bootstrap the DataDictionary table from the current studies schema
 dataDict-init:

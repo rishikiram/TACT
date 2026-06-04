@@ -12,7 +12,7 @@ GAP_SEVERITY_ENUM: tuple = ("unknown", "big", "not sufficient", "near sufficient
 allowed_gaps = ", ".join(f"'{s}'" for s in GAP_SEVERITY_ENUM)
 
 TABLES_SCHEMA = f"""
-CREATE TABLE studies (
+CREATE TABLE IF NOT EXISTS studies (
     nct_id                  TEXT PRIMARY KEY,
     title                   TEXT,
     status                  TEXT,
@@ -47,7 +47,7 @@ CREATE TABLE studies (
     ingested_at             TEXT
 );
 
-CREATE TABLE sources (
+CREATE TABLE IF NOT EXISTS sources (
     id                      INTEGER PRIMARY KEY, -- TODO: add uid's
     uid                     STRING UNIQUE,
     type                    TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE sources (
     target_evidence_types   TEXT   -- JSON array for now -- this is how im imagining a user programaticaly allowing the repo to build the EOs
 );
 
-CREATE TABLE evidence_objects (
+CREATE TABLE IF NOT EXISTS evidence_objects (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     type                    TEXT, -- could be turned into a fk with a set of options
@@ -65,7 +65,7 @@ CREATE TABLE evidence_objects (
     confidence              TEXT -- could also be turned into a fk with a set of options
 );
 
-CREATE TABLE claims (
+CREATE TABLE IF NOT EXISTS claims (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     statement               TEXT,
@@ -74,7 +74,7 @@ CREATE TABLE claims (
     risk_note               TEXT
 );
 
-CREATE TABLE requirements (
+CREATE TABLE IF NOT EXISTS requirements (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     jurisdiction            TEXT,
@@ -83,7 +83,7 @@ CREATE TABLE requirements (
     -- potential_gaps       TEXT  -- TODO, all gaps are manually created so tracking potential gaps doesn't help anything. 
 );
 
-CREATE TABLE gaps (
+CREATE TABLE IF NOT EXISTS gaps (
     id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     requirement_id          INTEGER,
@@ -97,7 +97,7 @@ CREATE TABLE gaps (
 
 RELATIONSHIPS_SCHEMA = """
 -- Many-to-many sources to evidence  -- this might be unecessary, could be one-to-many (source-to-EOs)
-CREATE TABLE evidence_object_sources (
+CREATE TABLE IF NOT EXISTS evidence_object_sources (
     source_id               INTEGER,
     evidence_object_id      INTEGER,
     PRIMARY KEY (source_id, evidence_object_id),
@@ -108,7 +108,7 @@ CREATE TABLE evidence_object_sources (
 );
 
 -- Many-to-many evidence to claims
-CREATE TABLE claim_evidence_objects (
+CREATE TABLE IF NOT EXISTS claim_evidence_objects (
     claim_id                INTEGER,
     evidence_object_id      INTEGER,
     PRIMARY KEY (claim_id, evidence_object_id),
@@ -119,7 +119,7 @@ CREATE TABLE claim_evidence_objects (
 );
 
 -- Many-to-many-to-many claims to gaps
-CREATE TABLE gap_claims (
+CREATE TABLE IF NOT EXISTS gap_claims (
     claim_id                INTEGER,
     gap_id                  INTEGER,
     PRIMARY KEY (claim_id, gap_id),
@@ -180,12 +180,10 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
         study,
     )
 
-
 def upsert_studies(studies: list[dict]) -> int:
     with connect() as conn:
         for study in studies:
             upsert_study(conn, study)
-        # conn.commit() # TODO: think about where I want commits to happen. Possibly it should happen less frequently.
     return len(studies)
 
 def insert_sources(sources: list[dict]) -> int:

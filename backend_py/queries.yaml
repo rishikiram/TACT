@@ -22,14 +22,11 @@ nsclc_adenocarcinoma:
     targeted therapy OR precision medicine
   # filter.advanced: PHASE2
 
-# nsclc_adenocarcinoma_v2:
-#   query.cond: >-
-#     non-small cell lung cancer OR NSCLC
-#   query.term: >-
-#     adenocarcinoma
-#   query.intr: >-
-#     targeted therapy OR precision medicine OR inhibitor
-#   # filter.advanced: PHASE2
+nsclc_kras:
+  query.cond: >-
+    non-small cell lung cancer OR NSCLC
+  query.intr: >-
+    KRAS G12C inhibitor
 
 recruiting_diabetes:
   query.cond: diabetes

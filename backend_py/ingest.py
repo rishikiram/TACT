@@ -15,7 +15,7 @@ import yaml
 import json
 
 from backend_py.clean import clean_ctgov_studies
-from backend_py.ctgov import fetch_all_pages
+import backend_py.ctgov as ctgov
 import backend_py.db as db
 import backend_py.gaps as Gaps
 
@@ -59,7 +59,7 @@ def ingest_studies(params: dict) -> None:
     before = db.count()
 
     print("[ingest] fetching from CT.gov...")
-    raw_studies = fetch_all_pages(params)
+    raw_studies = ctgov.fetch_all_pages(params)
     print(f"[ingest] fetched {len(raw_studies)} studies")
 
     cleaned, dropped = clean_ctgov_studies(raw_studies)
@@ -309,8 +309,10 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
 if __name__ == "__main__":
     presets = load_presets()
     params = parse_args(presets)
-    # ingest_studies(params)
-    ingest_tracible_stack_test()
+    ingest_studies(params)
+    # nctids = ctgov.fetch_all_nctids(params)
+    # print(nctids)
+    # ingest_tracible_stack_test()
 
 def testing():
     print( db.query("SELECT COUNT(*) FROM sources")[0][0])

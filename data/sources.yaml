@@ -1,0 +1,39 @@
+SRC-001: 
+  title: Target Product Profile excerpt
+  text: >-
+    VER-101 is intended as an oral targeted therapy for adults with KRAS G12C-positive metastatic NSCLC after prior systemic
+    therapy. Desired differentiation includes clinically meaningful tumor response, convenient oral administration, manageable
+    safety, and potential delay in disease progression. The target product profile anticipates use in a biomarker-defined
+    population and requires a clear testing pathway for KRAS G12C status.
+
+SRC-002: 
+  title:  Phase II protocol synopsis
+  text: >-
+    The VER-101-201 study is a Phase II, open-label, single-arm trial enrolling approximately 118 adults with KRAS G12C-positive
+    metastatic NSCLC after at least one prior systemic therapy. The primary endpoint is confirmed objective response rate.
+    Secondary endpoints include progression-free survival, duration of response, overall survival, safety/tolerability, and
+    exploratory patient-reported outcomes. No randomized comparator arm is included.
+
+SRC-003: 
+  title:  Statistical analysis plan excerpt
+  text: >-
+    The primary efficacy analysis estimates confirmed objective response rate with exact confidence intervals. PFS, duration of
+    response, and overall survival are summarized descriptively. Subgroup analyses by prior therapy and selected baseline
+    characteristics are exploratory. Patient-reported outcomes are exploratory, with no formal responder definition and no
+    multiplicity adjustment.
+SRC-004: 
+  title:  Interim clinical study report excerpt
+  text: >-
+    At the interim cutoff, 118 patients were treated. Confirmed objective response rate was 38%. Median progression-free
+    survival was 6.2 months. Overall survival data were immature, with median OS not reached and limited follow-up. Grade 3 or
+    higher treatment-related adverse events occurred in 18% of patients. Patient-reported outcome completion declined over
+    time and results are considered exploratory.
+
+SRC-005: 
+  title:  Draft access claims
+  text: >-
+    VER-101 demonstrates clinically meaningful tumor response in 2L KRAS G12C-positive metastatic NSCLC.; 
+    VER-101 improves progression-free survival versus current standard of care.; 
+    VER-101 offers manageable safety and oral convenience.; 
+    VER-101 improves patient quality of life.; 
+    VER-101 addresses unmet need in a biomarker-defined NSCLC population.;
