@@ -309,9 +309,12 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
 if __name__ == "__main__":
     presets = load_presets()
     params = parse_args(presets)
-    ingest_studies(params)
-    # nctids = ctgov.fetch_all_nctids(params)
-    # print(nctids)
+    # ingest_studies(params)
+    ds = ctgov.fetch_all_nctids(params)
+    nctids = []
+    for d in ds:
+        nctids.append(d["protocolSection"]["identificationModule"]["nctId"])
+    print(nctids)
     # ingest_tracible_stack_test()
 
 def testing():
