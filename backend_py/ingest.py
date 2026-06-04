@@ -266,7 +266,6 @@ def build_traceable_stack() -> None:
             gaps.append(g.to_dict())
         db.insert_and_link_gaps(conn, gaps)
 
-        update_claim_status(conn, "CLAIM-006", "supported")
 
 
     
@@ -274,7 +273,8 @@ def build_traceable_stack() -> None:
     # ingest sources
     # extract exhaustive set of evidence objects
     # connect evidence objects to support or disprove claims
-    # update gap severity
+    # update gap severity - ✅
+        update_claim_status(conn, "CLAIM-006", "supported") # works
     # build (traceable) report 
 
 def build_gap_objects() -> list[Gaps.Gap]:
@@ -300,6 +300,7 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
     cursor.execute(q, (claim_uid,))
     gap_uids = list(cursor.fetchall()[0])
 
+    # update gaps by running gap severity function
     for gap_uid in gap_uids:
         gap_obj = Gaps.GAP_REGISTRY[gap_uid]() # type: ignore
         gap_obj.set_severity_and_rationale(conn)
