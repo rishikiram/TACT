@@ -333,12 +333,11 @@ def update_gap(conn, gap) -> None:
     if "requirement_uid" in gap:
         row["requirement_id"] = get_id(conn, "requirements", gap["requirement_uid"])
 
-    cols = ", ".join(row.keys())
-    placeholders = ", ".join(f":{k}" for k in row.keys())
+    col_keys = ", ".join(f"{k} = :{k}" for k in row.keys())
     crsr.execute(
         f"""
-        UPDATE gaps SET ({cols})
-        VALUES ({placeholders})
+        UPDATE gaps SET {col_keys} 
+        WHERE uid = :uid
         """,
         row,
     )

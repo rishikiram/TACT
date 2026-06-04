@@ -266,7 +266,7 @@ def build_traceable_stack() -> None:
             gaps.append(g.to_dict())
         db.insert_and_link_gaps(conn, gaps)
 
-        update_claim_status(conn, "CLAIM-006")
+        update_claim_status(conn, "CLAIM-006", "supported")
 
 
     
@@ -287,7 +287,7 @@ def build_gap_objects() -> list[Gaps.Gap]:
     gap_list.append(Gaps.Gap_006())
     return gap_list
 
-def update_claim_status(conn, claim_uid, support_status="supported") -> None:
+def update_claim_status(conn, claim_uid, support_status) -> None:
     cursor = conn.cursor()
     cursor.execute("UPDATE claims SET support_status = ? WHERE uid = ?", (support_status, claim_uid))
     q = """
@@ -302,7 +302,8 @@ def update_claim_status(conn, claim_uid, support_status="supported") -> None:
 
     for gap_uid in gap_uids:
         gap_obj = Gaps.GAP_REGISTRY[gap_uid]() # type: ignore
-        gap_obj.
+        gap_obj.set_severity_and_rationale(conn)
+        db.update_gap(conn, gap_obj.to_dict())
 
 if __name__ == "__main__":
     presets = load_presets()
