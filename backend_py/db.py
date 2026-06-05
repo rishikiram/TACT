@@ -48,12 +48,18 @@ CREATE TABLE IF NOT EXISTS studies (
 );
 
 CREATE TABLE IF NOT EXISTS sources (
-    id                      INTEGER PRIMARY KEY, -- TODO: add uid's
+    id                      INTEGER PRIMARY KEY,
     uid                     STRING UNIQUE,
     type                    TEXT,
     title                   TEXT,
     url                     TEXT,
     target_evidence_types   TEXT   -- JSON array for now -- this is how im imagining a user programaticaly allowing the repo to build the EOs
+);
+
+CREATE TABLE IF NOT EXIST queries (
+    uid                     TEXT PRIMARY KEY,
+    text                    TEXT
+    -- last_ingested           TEXT
 );
 
 CREATE TABLE IF NOT EXISTS evidence_objects (
@@ -96,6 +102,17 @@ CREATE TABLE IF NOT EXISTS gaps (
 """
 
 RELATIONSHIPS_SCHEMA = """
+-- Many to many 
+CREATE TABLE IF NOT EXISTS study_queries (
+    nct_id               INTEGER,
+    query_uid               TEXT,
+    PRIMARY KEY (nct_id, query_uid),
+    FOREIGN KEY (nct_id)
+        REFERENCES studies(nct_id),
+    FOREIGN KEY (query_uid)
+        REFERENCES queries(uid)
+);
+
 -- Many-to-many sources to evidence  -- this might be unecessary, could be one-to-many (source-to-EOs)
 CREATE TABLE IF NOT EXISTS evidence_object_sources (
     source_id               INTEGER,
@@ -180,16 +197,43 @@ def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
         study,
     )
 
-def upsert_studies(studies: list[dict]) -> int:
+def upsert_studies(studies: list[dict], query: dict) -> int:
     with connect() as conn:
+        crsr = conn.cursor()
+        crsr.execute(
+            """
+            INSERT INTO queries (uid, text)
+            VALUES (:uid, :text)
+            ON CONFLICT(uid) 
+            DO UPDATE SET text = excluded.text; -- add datetime of text update
+            """,
+
+        )
         for study in studies:
             upsert_study(conn, study)
+            crsr.execute(
+                """
+                INSERT INTO study_queries (
+                    nct_id, query_uid
+                ) VALUES (?, ?)
+                ON CONFLICT(nct_id, query_uid) DO NOTHING;
+                """,
+                (study["nct_id"], query["uid"])
+            )
     return len(studies)
 
 def insert_sources(sources: list[dict]) -> int:
-    # TODO: shift pk generation to RDBM, and enable row replacment
     with connect() as conn:
         crsr = conn.cursor()
+        crsr.execute(
+            """
+            INSERT INTO queries (uid, text)
+            VALUES (:uid, :text)
+            ON CONFLICT(uid) 
+            DO UPDATE SET text = excluded.text;
+            """,
+
+        )
         for source in sources:
             crsr.execute(
                 """
@@ -201,7 +245,6 @@ def insert_sources(sources: list[dict]) -> int:
                 """,
                 source
             )
-        # conn.commit()
     return len(sources)
 
 def insert_and_link_EOs(evidence_objs: list[dict]) -> int:

@@ -2,10 +2,10 @@
 Fetch studies from CT.gov, clean them, and write to SQLite.
 
 Usage:
-    python ingest.py <preset>        # run a named preset from queries.yaml
+    python ingest.py <preset>        # run a named preset from queries_ctgov.yaml
     python ingest.py --list          # show available presets
 
-Presets are defined in queries.yaml.
+Presets are defined in queries_ctgov.yaml.
 """
 
 import argparse
@@ -19,7 +19,7 @@ import backend_py.ctgov as ctgov
 import backend_py.db as db
 import backend_py.gaps as Gaps
 
-QUERIES_FILE = Path(__file__).parent / "queries.yaml"
+QUERIES_FILE = Path(__file__).parent / "queries_ctgov.yaml"
 REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
 CLAIMS_FILE = Path(__file__).parent.parent / "data" / "claims.yaml"
 
@@ -49,10 +49,10 @@ def parse_args(presets: dict):
     if args.preset not in presets:
         parser.error(f"Unknown preset '{args.preset}'. Run --list to see options.")
 
-    return presets[args.preset]
+    return presets[args.preset], args.preset
 
 
-def ingest_studies(params: dict) -> None:
+def ingest_ctgov_studies(params: dict, query_uid: str) -> None:
     print(f"[ingest] query params: {params}")
 
     db.init_db()
@@ -308,8 +308,8 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
 
 if __name__ == "__main__":
     presets = load_presets()
-    params = parse_args(presets)
-    # ingest_studies(params)
+    params, preset_uid = parse_args(presets)
+    # ingest_ctgov_studies(params, preset_uid)
     ds = ctgov.fetch_all_nctids(params)
     nctids = []
     for d in ds:

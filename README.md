@@ -1,4 +1,4 @@
-# Toolkit and Application for Clinical Trials (TACT)
+# [OUTDATED] Toolkit and Application for Clinical Trials (TACT)
 
 A toolkit for exploring ClinicalTrials.gov data — a Python pipeline for ingesting, cleaning, and analyzing studies into a local SQLite database, paired with a web app for interactive mapping and visualization.
 
@@ -38,18 +38,18 @@ The pipeline is independent of the web app. It fetches from CT.gov, cleans the d
 backend_py (Python pipeline)  ──►  data/clinical_trials.db (SQLite)
 ```
 
-Query presets are defined in `backend_py/queries.yaml`. Each preset maps a name (e.g. `nsclc`, `oncology`) to CT.gov v2 API parameters. The `eda.ipynb` notebook reads from the database and produces figures saved to `backend_py/figures/` and `figures/`.
+Query presets are defined in `backend_py/queries_ctgov.yaml`. Each preset maps a name (e.g. `nsclc`, `oncology`) to CT.gov v2 API parameters. The `eda.ipynb` notebook reads from the database and produces figures saved to `backend_py/figures/` and `figures/`.
 
 | File | Description |
 |---|---|
 | `db.py` | database schema and definition |
 | `clean.py` | data processing, converting the json from clinicaltrials.gov into database rows|
-| `queries.yaml` | yaml file directly defining query to clinicaltrials.gov |
+| `queries_ctgov.yaml` | yaml file directly defining query to clinicaltrials.gov |
 | `injest.py` | script for CLI to run injection |
 
 #### Adding a new preset
 
-Add an entry to `backend_py/queries.yaml` using CT.gov v2 API parameter keys, then run `python ingest.py <your-preset>`.
+Add an entry to `backend_py/queries_ctgov.yaml` using CT.gov v2 API parameter keys, then run `python ingest.py <your-preset>`.
 
 ## Web App
 

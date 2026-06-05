@@ -31,8 +31,8 @@ export const NSCLC_KRAS: FetchTrialsParams = {
 };
 
 export const NSCLC_2line: FetchTrialsParams = {
-  "query.cond": '"NSCLC" OR "non-small cell lung cancer"',
-  "query.term": '"second line" OR "previously treated" OR "progressed"',
+  "query.cond": '"metastatic NSCLC" OR "metastatic non-small cell lung cancer"',
+  "query.term": '"second line" OR "second-line" OR "previously treated"',
   // "filter.overallStatus": "COMPLETED",
 };
 

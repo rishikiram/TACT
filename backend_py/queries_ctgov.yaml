@@ -23,10 +23,13 @@ nsclc_adenocarcinoma:
   # filter.advanced: PHASE2
 
 nsclc_kras:
-  query.cond: >-
-    non-small cell lung cancer OR NSCLC
-  query.intr: >-
-    KRAS G12C inhibitor
+  query.cond: '"non-small cell lung cancer" OR NSCLC'
+  query.intr: '"KRAS G12C inhibitor"'
+
+nsclc_2line:
+  query.cond: '"metastatic NSCLC" OR "metastatic non-small cell lung cancer"'
+  query.term: '"second line" OR "second-line" OR "previously treated"'
+
 
 recruiting_diabetes:
   query.cond: diabetes
