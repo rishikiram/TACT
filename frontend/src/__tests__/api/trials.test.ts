@@ -28,7 +28,7 @@ describe("fetchTrials", () => {
       })
     );
 
-    const result = await fetchTrials({ condition: "diabetes" });
+    const result = await fetchTrials({ "query.cond": "diabetes" });
 
     expect(fetch).toHaveBeenCalledWith("/api/trials?query.cond=diabetes");
     expect(result.trials).toHaveLength(1);
@@ -50,7 +50,7 @@ describe("fetchTrials", () => {
       vi.fn().mockResolvedValue({ ok: false, status: 502 })
     );
 
-    await expect(fetchTrials({ condition: "diabetes" })).rejects.toThrow(
+    await expect(fetchTrials({ "query.cond": "diabetes" })).rejects.toThrow(
       "Request failed: 502"
     );
   });

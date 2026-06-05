@@ -6,6 +6,6 @@ export function useAllTrials(params: FetchTrialsParams) {
   return useQuery({
     queryKey: ["trials/all", params],
     queryFn: () => fetchAllTrials(params),
-    enabled: Boolean(params.condition || params.term),
+    enabled: Object.keys(params).length > 0,
   });
 }

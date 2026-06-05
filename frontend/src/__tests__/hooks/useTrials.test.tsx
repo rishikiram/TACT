@@ -38,7 +38,7 @@ describe("useTrials", () => {
       })
     );
 
-    const { result } = renderHook(() => useTrials({ condition: "diabetes" }), {
+    const { result } = renderHook(() => useTrials({ "query.cond": "diabetes" }), {
       wrapper,
     });
 
@@ -53,7 +53,7 @@ describe("useTrials", () => {
       vi.fn().mockResolvedValue({ ok: false, status: 500 })
     );
 
-    const { result } = renderHook(() => useTrials({ condition: "cancer" }), {
+    const { result } = renderHook(() => useTrials({ "query.cond": "cancer" }), {
       wrapper,
     });
 

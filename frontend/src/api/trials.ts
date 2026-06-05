@@ -77,16 +77,7 @@ export interface Trial {
   briefSummary?: string;
 }
 
-export interface FetchTrialsParams {
-  condition?: string;
-  term?: string;
-  status?: string;
-  intr?: string;
-  // phase?: string;
-  filterAdvanced?: string; 
-  pageSize?: number;
-  pageToken?: string;
-}
+export type FetchTrialsParams = Record<string, string | number>;
 
 export interface FetchTrialsResult {
   trials: Trial[];
@@ -161,11 +152,9 @@ function mapStudy(study: any): Trial {
 
 function buildQuery(params: FetchTrialsParams): URLSearchParams {
   const query = new URLSearchParams();
-  if (params.condition) query.set("query.cond", params.condition);
-  if (params.term) query.set("query.term", params.term);
-  if (params.status) query.set("filter.overallStatus", params.status);
-  if (params.intr) query.set("query.intr", params.intr);
-  if (params.filterAdvanced) query.set("filter.advanced", params.filterAdvanced);
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) query.set(key, String(value));
+  }
   return query;
 }
 
@@ -173,8 +162,6 @@ export async function fetchTrials(
   params: FetchTrialsParams
 ): Promise<FetchTrialsResult> {
   const query = buildQuery(params);
-  if (params.pageSize) query.set("pageSize", String(params.pageSize));
-  if (params.pageToken) query.set("pageToken", params.pageToken);
 
   const res = await fetch(`/api/trials?${query.toString()}`);
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
