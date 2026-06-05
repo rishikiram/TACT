@@ -41,9 +41,14 @@ CREATE TABLE IF NOT EXISTS studies (
     allocation              TEXT,
     intervention_model      TEXT,
     primary_purpose         TEXT,
+    eligibility_criteria    TEXT,
+    healthy_volunteers      TEXT,
+    -- std_ages             TEXT,
     locations               TEXT,   -- JSON array of [facility, city, state, country, lat, lon]
+    multicountry            BOOLEAN,
     primary_outcomes        TEXT,   -- JSON array
     secondary_outcomes      TEXT,   -- JSON array
+    has_results             BOOLEAN,
     ingested_at             TEXT
 );
 
@@ -56,7 +61,7 @@ CREATE TABLE IF NOT EXISTS sources (
     target_evidence_types   TEXT   -- JSON array for now -- this is how im imagining a user programaticaly allowing the repo to build the EOs
 );
 
-CREATE TABLE IF NOT EXIST queries (
+CREATE TABLE IF NOT EXISTS queries (
     uid                     TEXT PRIMARY KEY,
     text                    TEXT
     -- last_ingested           TEXT
@@ -170,6 +175,7 @@ def init_db() -> None:
     print(f"[db] initialized at {DB_PATH}")
 
 def upsert_studies(studies: list[dict], query: dict) -> int:
+    # query requires {"uid": "...", "text": "..."}
     with connect() as conn:
         crsr = conn.cursor()
         crsr.execute(

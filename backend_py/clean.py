@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 
 def clean_ctgov_study(raw: dict) -> dict | None:
+    has_results = raw.get("hasResults")
     ps = raw.get("protocolSection", {})
 
     nct_id = ps.get("identificationModule", {}).get("nctId")
@@ -80,8 +81,8 @@ def clean_ctgov_study(raw: dict) -> dict | None:
         "primary_purpose": design_info.get("primaryPurpose"),
         #eligibilityModule
         "eligibility_criteria": eligibility_mod.get("eligibilityCriteria"),
-        "healthy_volunteers": eligibility_mod.get("healthyVolunteers"),
-        "std_ages": eligibility_mod.get("stdAges"),
+        "healthy_volunteers": eligibility_mod.get("healthyVolunteers"), # true/false?
+        # "std_ages": eligibility_mod.get("stdAges"),
         #contactsLocationsModule
         "locations": json.dumps(locations),
         "multicountry": multicountry,
@@ -89,6 +90,7 @@ def clean_ctgov_study(raw: dict) -> dict | None:
         "primary_outcomes": json.dumps(outcomes_mod.get("primaryOutcomes", [])),
         "secondary_outcomes": json.dumps(outcomes_mod.get("secondaryOutcomes", [])),
 
+        "has_results": raw.get("hasResults"),
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
 

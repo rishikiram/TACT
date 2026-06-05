@@ -27,8 +27,8 @@ nsclc_kras:
   query.intr: '"KRAS G12C inhibitor"'
 
 nsclc_2line:
-  query.cond: '"metastatic NSCLC" OR "metastatic non-small cell lung cancer"'
-  query.term: '"second line" OR "second-line" OR "previously treated"'
+  "query.cond": '"metastatic NSCLC" OR "metastatic non-small cell lung cancer"'
+  "query.term": '"second line" OR "second-line" OR "previously treated"'
 
 
 recruiting_diabetes:

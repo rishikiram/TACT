@@ -65,7 +65,8 @@ def ingest_ctgov_studies(params: dict, query_uid: str) -> None:
     cleaned, dropped = clean_ctgov_studies(raw_studies)
     print(f"[ingest] cleaned: {len(cleaned)}, dropped (missing id/title): {dropped}")
 
-    db.upsert_studies(cleaned)
+    query = {"uid":query_uid, "text":json.dumps(params)}
+    db.upsert_studies(cleaned, query)
     after = db.count()
     print(f"[ingest] done — db grew from {before} → {after} studies")
 
@@ -309,12 +310,14 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
 if __name__ == "__main__":
     presets = load_presets()
     params, preset_uid = parse_args(presets)
-    # ingest_ctgov_studies(params, preset_uid)
-    ds = ctgov.fetch_all_nctids(params)
-    nctids = []
-    for d in ds:
-        nctids.append(d["protocolSection"]["identificationModule"]["nctId"])
-    print(nctids)
+    ingest_ctgov_studies(params, preset_uid)
+
+    # ds = ctgov.fetch_all_nctids(params)
+    # nctids = []
+    # for d in ds:
+    #     nctids.append(d["protocolSection"]["identificationModule"]["nctId"])
+    # print(nctids)
+    
     # ingest_tracible_stack_test()
 
 def testing():
