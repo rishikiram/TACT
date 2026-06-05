@@ -169,53 +169,26 @@ def init_db() -> None:
         cursor.executescript(RELATIONSHIPS_SCHEMA)
     print(f"[db] initialized at {DB_PATH}")
 
-def upsert_study(conn: sqlite3.Connection, study: dict) -> None:
-    conn.cursor().execute(
-        """
-        INSERT OR REPLACE INTO studies (
-            nct_id, title, status, phase1, phase2, phase3, phase4, phase_text, study_type,
-            start_date, start_date_type, primary_completion_date, primary_completion_date_type,
-            completion_date, completion_date_type, last_update_post,
-            sponsor, sponsor_class,
-            conditions, condition_keywords,
-            interventions, arm_groups,
-            enrollment, enrollment_type,
-            masking, allocation, intervention_model, primary_purpose,
-            locations, primary_outcomes, secondary_outcomes, ingested_at
-        ) VALUES (
-            :nct_id, :title, :status, :phase1, :phase2, :phase3, :phase4, :phase_text, :study_type,
-            :start_date, :start_date_type, :primary_completion_date, :primary_completion_date_type,
-            :completion_date, :completion_date_type, :last_update_post,
-            :sponsor, :sponsor_class,
-            :conditions, :condition_keywords,
-            :interventions, :arm_groups,
-            :enrollment, :enrollment_type,
-            :masking, :allocation, :intervention_model, :primary_purpose,
-            :locations, :primary_outcomes, :secondary_outcomes, :ingested_at
-        )
-        """,
-        study,
-    )
-
 def upsert_studies(studies: list[dict], query: dict) -> int:
     with connect() as conn:
         crsr = conn.cursor()
         crsr.execute(
             """
-            INSERT INTO queries (uid, text)
-            VALUES (:uid, :text)
-            ON CONFLICT(uid) 
-            DO UPDATE SET text = excluded.text; -- add datetime of text update
+            INSERT INTO queries (uid, text) VALUES (:uid, :text)
+            ON CONFLICT(uid) DO UPDATE SET text = excluded.text; -- add datetime of text update
             """,
-
+            query
         )
         for study in studies:
-            upsert_study(conn, study)
+            cols = ", ".join(study.keys())
+            placeholders = ", ".join(f":{k}" for k in study.keys())
+            crsr.execute(
+                f"INSERT OR REPLACE INTO studies ({cols}) VALUES ({placeholders})",
+                study,
+            )
             crsr.execute(
                 """
-                INSERT INTO study_queries (
-                    nct_id, query_uid
-                ) VALUES (?, ?)
+                INSERT INTO study_queries (nct_id, query_uid) VALUES (?, ?)
                 ON CONFLICT(nct_id, query_uid) DO NOTHING;
                 """,
                 (study["nct_id"], query["uid"])
