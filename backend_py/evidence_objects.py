@@ -14,6 +14,10 @@ def get_comparator_EOs():
     # table eligibilities
     #   sampling_method
 
+    # NOTE: only one study related to KRAS G12C inhibitores has results in ctgov. 
+    #   6 others have publications, ["41037823", "40523897", "36399068", "41940628","41325755","40333694"]
+
+
     """
     SELECT o.* FROM outcome_measurements as o 
     WHERE o.nct_id IN 

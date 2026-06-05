@@ -8,7 +8,7 @@ allowed_claim_status = ", ".join(f"'{s}'" for s in CLAIM_STATUS_ENUM)
 CLAIM_REVIEW_STATUS_ENUM: tuple = ("ai_draft", "needs_review", "accepted", "rejected", "revised")
 allowed_claim_review_status = ", ".join(f"'{s}'" for s in CLAIM_REVIEW_STATUS_ENUM)
 
-GAP_SEVERITY_ENUM: tuple = ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding")
+GAP_SEVERITY_ENUM: tuple = ("no data", "non-conclusive", "high", "medium", "low", "zero")
 allowed_gaps = ", ".join(f"'{s}'" for s in GAP_SEVERITY_ENUM)
 
 TABLES_SCHEMA = f"""

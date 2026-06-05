@@ -46,16 +46,19 @@ export const NSCLC_precision: FetchTrialsParams = {
 
 export const NSCLC_KRAS: FetchTrialsParams = {
   condition: "NSCLC OR non-small cell lung cancer OR non small cell lung cancer",
-  // term: "adenocarcinoma",
-  intr: "KRAS G12C inhibitor",
-  // pageSize: 1000,
-  // filterAdvanced: "PHASE2 OR PHASE3",
-  // fields: ["protocolSection.contactsLocationsModule"] // Lets pull everything for now until we run into data issues
-  // things to add later:
-  // US and EU
-  // Exclude studies not yet enrolling
-  // Exclude phase 1 studies
+  intr: "KRAS G12C inhibitor"
 };
+
+export const NSCLC_2line: FetchTrialsParams = {
+  condition: '"NSCLC" OR "non-small cell lung cancer"',
+  term: '"second line" OR "previously treated" OR "progressed"',
+  // filter:
+  //   {overallStatus: "COMPLETED"}
+};
+// ?query.cond=non-small cell lung cancer
+// &query.term=("second line" OR "previously treated" OR "progressed")
+// &filter.overallStatus=COMPLETED
+
 export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
   condition: "non-small cell lung cancer OR NSCLC OR non small cell lung cancer",
   term: "adenocarcinoma",
@@ -63,6 +66,7 @@ export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
 };
 export const PRESETS: { label: string; params: FetchTrialsParams }[] = [
   { label: "NSCLC KRAS G12C", params: NSCLC_KRAS },
+  { label: "NSCLC 2nd-line treatment", params: NSCLC_2line},
   { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
   { label: "NSCLC Precision", params: NSCLC_precision },
   { label: "NSCLC", params: NSCLC },

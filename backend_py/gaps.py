@@ -3,7 +3,9 @@ import backend_py.db as db
 
 GAP_SEVERITY_ENUM = db.GAP_SEVERITY_ENUM
 CLAIM_STATUS_ENUM = db.CLAIM_STATUS_ENUM
-assert (GAP_SEVERITY_ENUM == ("unknown", "big", "not sufficient", "near sufficient", "sufficient", "exceeding"))
+assert (GAP_SEVERITY_ENUM == ("no data", "non-conclusive", "high", "medium", "low", "zero"))
+
+SUPPORTED = CLAIM_STATUS_ENUM[-1]
 assert (CLAIM_STATUS_ENUM[-1] == "supported")
 
 
@@ -56,20 +58,21 @@ class Gap_001(Gap):
     def severity_score(self, conn) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
+        
         # If standard-of-care comparator is present
-        if self.get_claim_status(conn, self.SOC_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.SOC_comparator_claim) == SUPPORTED:
             score += 2
             new_rationale += ["Standard of Care comparator is present"]
 
-        if self.get_claim_status(conn, self.placebo_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.placebo_comparator_claim) == SUPPORTED:
             score += 1
             new_rationale += ["Placebo comparator is present"]
 
-        if self.get_claim_status(conn, self.direct_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.direct_comparator_claim) == SUPPORTED:
             score += 1
             new_rationale += ["Direct comparator is present"]
 
-        if self.get_claim_status(conn, self.indirect_comparator_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.indirect_comparator_claim) == SUPPORTED:
             score += 1
             new_rationale += ["Indirect comparator is present"]
 
@@ -97,15 +100,15 @@ class Gap_002(Gap):
     def severity_score(self, conn) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
-        if self.get_claim_status(conn, self.os_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.os_claim) == SUPPORTED:
             score += 3
             new_rationale += ["Overall Survival is shown"]
 
-        if self.get_claim_status(conn, self.pfs_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.pfs_claim) == SUPPORTED:
             score += 2
             new_rationale += ["Significant progression free survival is shown"]
 
-        if self.get_claim_status(conn, self.orr_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.orr_claim) == SUPPORTED:
             score += 1
             new_rationale += ["A meaningful tumor response is shown"]
 
@@ -130,15 +133,15 @@ class Gap_003(Gap):
     def severity_score(self, conn) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
-        if self.get_claim_status(conn, self.QoL_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.QoL_claim) == SUPPORTED:
             score += 2
             new_rationale += [self.get_claim_statement(conn, self.QoL_claim)] # this can be done by the relational database w/ reusing the text
 
-        if  self.get_claim_status(conn, self.PRO_claim) == CLAIM_STATUS_ENUM[-1]:
+        if  self.get_claim_status(conn, self.PRO_claim) == SUPPORTED:
             score += 2
             new_rationale += [self.get_claim_statement(conn, self.PRO_claim)]
 
-        if self.get_claim_status(conn, self.safety_and_convenience_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.safety_and_convenience_claim) == SUPPORTED:
             score += 1
             new_rationale += [self.get_claim_statement(conn, self.safety_and_convenience_claim)]
 
@@ -161,7 +164,7 @@ class Gap_004(Gap):
     def severity_score(self, conn) -> tuple:
         score = 2 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
-        if self.get_claim_status(conn, self.econ_model_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.econ_model_claim) == SUPPORTED:
             score += 2
             new_rationale += [self.get_claim_statement(conn, self.econ_model_claim)] # this can be done by the relational database w/ reusing the text
 
@@ -176,17 +179,17 @@ class Gap_005(Gap):
     uid: str = "GAP-005"
     requirement_uid: str = "REQ-US-BIOMARKER-001"
     
-    biomkr_claim: str = "CLAIM-005"
+    biomarker_claim: str = "CLAIM-005"
 
     def __post_init__(self):
-        self.claim_uids = [self.biomkr_claim]
+        self.claim_uids = [self.biomarker_claim]
 
     def severity_score(self, conn) -> tuple:
         score = 2 # GAP_SEVERITY_ENUM[4] == supported
         new_rationale = []
-        if self.get_claim_status(conn, self.biomkr_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.biomarker_claim) == SUPPORTED:
             score += 2
-            new_rationale += [self.get_claim_statement(conn, self.biomkr_claim)] # this can be done by the relational database w/ reusing the text
+            new_rationale += [self.get_claim_statement(conn, self.biomarker_claim)] # this can be done by the relational database w/ reusing the text
 
         score = min(5, score)
         if len(new_rationale) == 0:
@@ -199,29 +202,29 @@ class Gap_006(Gap):
     uid: str = "GAP-006"
     requirement_uid: str = "REQ-US-BIOMARKER-001"
     
-    biomkr_effective_claim: str = "CLAIM-005"
-    biomrk_testing_path_claim: str = "CLAIM-014"
+    biomarker_effective_claim: str = "CLAIM-005"
+    biomarker_testing_path_claim: str = "CLAIM-014"
     subgroup_claim: str = "CLAIM-015"
 
     def __post_init__(self):
-        self.claim_uids = [self.biomkr_effective_claim, self.biomrk_testing_path_claim, self.subgroup_claim]
+        self.claim_uids = [self.biomarker_effective_claim, self.biomarker_testing_path_claim, self.subgroup_claim]
 
     def severity_score(self, conn) -> tuple:
         score = 1 # GAP_SEVERITY_ENUM[-1] == supported
         new_rationale = []
-        if self.get_claim_status(conn, self.biomkr_effective_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.biomarker_effective_claim) == SUPPORTED:
             score += 1
             new_rationale += ["VER-101 addresses unmet need in a biomarker-defined NSCLC population."] # this can be done by the relational database w/ reusing the text
         else:
                 new_rationale += ["Relevant and well defined biomarker is not present"]
 
-        if self.get_claim_status(conn, self.biomrk_testing_path_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.biomarker_testing_path_claim) == SUPPORTED:
             score += 1
             new_rationale += ["VER-101 biomarker testing pathway is well defined."] # this can be done by the relational database w/ reusing the text
         else:
                 new_rationale += ["Biomarker testing pathway is not defined"]
 
-        if self.get_claim_status(conn, self.subgroup_claim) == CLAIM_STATUS_ENUM[-1]:
+        if self.get_claim_status(conn, self.subgroup_claim) == SUPPORTED:
             score += 1
             new_rationale += ["VER-101 has rigorous statistically analysis subgroups."] # this can be done by the relational database w/ reusing the text
         else:

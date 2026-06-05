@@ -7,6 +7,7 @@ export function registerRoutes(app: Application): void {
   app.get("/api/trials", (req: Request, res: Response) => {
     const params = new URLSearchParams(req.query as Record<string, string>);
     const url = `${CT_GOV_BASE}?${params.toString()}`;
+    console.log(`[/api/trials] ${url}`);
 
     https
       .get(url, { headers: { Accept: "application/json" } }, (upstream) => {
