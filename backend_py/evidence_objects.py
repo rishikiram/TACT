@@ -16,19 +16,170 @@ def get_nctids(query_uid: str) -> list[str]:
         r = [row[0] for row in cursor.fetchall()]
     return r
 
-def get_comparator_EOs(study_nctids: list[str]) -> list[dict]:
+def get_SOC_compartor_studies(query_uid: str) -> list[dict]:
+    nct_ids = get_nctids(query_uid)
+    if not nct_ids:
+        return []
     with aact.connect_aact() as conn:
         cur = conn.cursor()
-        nct_ids = []
+        # I dont want to use dssign groups, as they are not necesarilty related to the outocme grpups
         cur.execute(
             """
-            SELECT o.* FROM outcome_measurements as o 
-            WHERE o.nct_id = ANY(%s)
+            SELECT
+                rg.nct_id,
+                rg.group_type,
+                rg.title        AS arm_title,
+                rg.description  AS arm_description,
+                o.title         AS outcome_title,
+                o.outcome_type,
+                om.param_type,
+                om.param_value,
+                om.dispersion_type,
+                om.dispersion_value,
+                om.units
+            FROM result_groups rg
+            JOIN outcome_measurements om
+                ON  om.nct_id          = rg.nct_id
+                AND om.ctgov_group_code = rg.ctgov_group_code
+            JOIN outcomes o
+                ON  o.id = om.outcome_id
+            WHERE rg.nct_id = ANY(%s)
+              AND rg.result_type = 'Outcome'
+              AND rg.group_type IN (
+                    'Active Comparator',
+                    'Placebo Comparator',
+                    'Sham Comparator',
+                    'No Intervention'
+              )
+            ORDER BY rg.nct_id, rg.title, o.title
+            """,
+            (nct_ids,)
+        )
+        rows = cur.fetchall()
+    return [
+        {
+            "nct_id":            row[0],
+            "group_type":        row[1],
+            "arm_title":         row[2],
+            "arm_description":   row[3],
+            "outcome_title":     row[4],
+            "outcome_type":      row[5],
+            "param_type":        row[6],
+            "param_value":       row[7],
+            "dispersion_type":   row[8],
+            "dispersion_value":  row[9],
+            "units":             row[10],
+        }
+        for row in rows
+    ]
+
+def get_comparator_outcome_measurments(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                om.nct_id,
+                om.ctgov_group_code,
+                o.title,
+                o.outcome_type,
+                om.param_type,
+                om.param_value,
+                om.dispersion_type,
+                om.dispersion_value,
+                om.units
+            FROM outcome_measurements om
+            JOIN outcomes o ON o.id = om.outcome_id
+            WHERE om.nct_id = ANY(%s)
+            ORDER BY om.nct_id, o.title
             """,
             (study_nctids,)
         )
-    return []
+        rows = cur.fetchall()
+    return [
+        {
+            "nct_id":           row[0],
+            "ctgov_group_code": row[1],
+            "outcome_title":    row[2],
+            "outcome_type":     row[3],
+            "param_type":       row[4],
+            "param_value":      row[5],
+            "dispersion_type":  row[6],
+            "dispersion_value": row[7],
+            "units":            row[8],
+        }
+        for row in rows
+    ]
 
+def get_potential_comparator_groups(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT t.nct_id, t.group_type, t.title, t.description FROM design_groups as t 
+            WHERE t.nct_id = ANY(%s)
+            """,
+            (study_nctids,)
+        ) 
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "group_type": row[1], "title": row[2], "description": row[3]} for row in rows]
+    return r
+
+def get_potential_comparator_endpoints(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT t.nct_id, t.outcome_type, t.measure, t.timeframe, t.population, t.description FROM design_outcomes AS t 
+            WHERE t.nct_id = ANY(%s)
+            """,
+            (study_nctids,)
+        )
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "outcome_type": row[1], "measure": row[2], "timeframe": row[3], "population": row[4], "description": row[5]} for row in rows]
+    return r
+
+def get_something(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT t.nct_id, t.outcome_type, t.measure, t.timeframe, t.population, t.description FROM design_outcomes AS t 
+            WHERE t.nct_id = ANY(%s)
+            """,
+            (study_nctids,)
+        )
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "outcome_type": row[1], "measure": row[2], "timeframe": row[3], "population": row[4], "description": row[5]} for row in rows]
+    return r
+
+def get_stuff(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT t.nct_id, t.outcome_type, t.measure, t.timeframe, t.population, t.description FROM design_outcomes AS t 
+            WHERE t.nct_id = ANY(%s)
+            """,
+            (study_nctids,)
+        )
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "outcome_type": row[1], "measure": row[2], "timeframe": row[3], "population": row[4], "description": row[5]} for row in rows]
+    return r
+
+def get_foo(study_nctids: list[str]) -> list[dict]:
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT t.nct_id, t.outcome_type, t.measure, t.timeframe, t.population, t.description FROM design_outcomes AS t 
+            WHERE t.nct_id = ANY(%s)
+            """,
+            (study_nctids,)
+        )
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "outcome_type": row[1], "measure": row[2], "timeframe": row[3], "population": row[4], "description": row[5]} for row in rows]
+    return r
 
 # given ids, pull data from db.studies table or aact db.
 
