@@ -25,39 +25,11 @@ REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
 CLAIMS_FILE = Path(__file__).parent.parent / "data" / "claims.yaml"
 
 
-def load_presets() -> dict:
-    with open(QUERIES_FILE) as f:
-        return yaml.safe_load(f)
-
-
-def parse_args(presets: dict):
-    parser = argparse.ArgumentParser(description="Ingest CT.gov studies into SQLite.")
-    parser.add_argument("preset", nargs="?", help="Preset name from queries.yaml")
-    parser.add_argument("--list", action="store_true", help="List available presets")
-    args = parser.parse_args()
-
-    if args.list:
-        print("Available presets:")
-        for name, params in presets.items():
-            print(f"  {name}")
-            # for k, v in params.items():
-            #     print(f"    {k}: {v}")
-        raise SystemExit(0)
-
-    if not args.preset:
-        parser.error("Provide a preset name, or --list to see options")
-
-    if args.preset not in presets:
-        parser.error(f"Unknown preset '{args.preset}'. Run --list to see options.")
-
-    return presets[args.preset], args.preset
-
-
-def ingest_ctgov_studies(params: dict, query_uid: str) -> None:
+def ingest_ctgov_studies(conn, query_uid: str, params: dict) -> None:
     print(f"[ingest] query params: {params}")
 
-    db.init_db()
-    before = db.count()
+    # db.init_db()
+    # before = db.count()
 
     print("[ingest] fetching from CT.gov...")
     raw_studies = ctgov.fetch_all_pages(params)
@@ -67,10 +39,9 @@ def ingest_ctgov_studies(params: dict, query_uid: str) -> None:
     print(f"[ingest] cleaned: {len(cleaned)}, dropped (missing id/title): {dropped}")
 
     query = {"uid":query_uid, "text":json.dumps(params)}
-    db.upsert_studies(cleaned, query)
-    after = db.count()
-    print(f"[ingest] done — db grew from {before} → {after} studies")
-
+    db.upsert_studies(conn, cleaned, query)
+    # after = db.count()
+    # print(f"[ingest] done — db grew from {before} → {after} studies")
 
 def ingest_tracible_stack() -> None:
     db.init_db()
@@ -159,6 +130,8 @@ def ingest_tracible_stack() -> None:
 
 def build_traceable_stack() -> None:
     db.init_db()
+    tables = ["sources", "evidence_objects", "queries", "studies", "claims", "requirements", "gaps"]
+    before = [db.count(t) for t in tables]
 
     with db.connect() as conn:
         # ingest requirements
@@ -186,17 +159,29 @@ def build_traceable_stack() -> None:
             g.set_severity_and_rationale(conn)
             gaps.append(g.to_dict())
         db.insert_and_link_gaps(conn, gaps)
-
-
-
-    
-
+        
     # ingest sources
+        with open(QUERIES_FILE) as f:
+            queries = yaml.safe_load(f)
+        for uid,params in queries.items():
+            ingest_ctgov_studies(conn, uid, params)
+
     # extract exhaustive set of evidence objects
+        sources, comparator_eos = build_comparator_EOs(conn)
+        print(len(sources), len(comparator_eos))
+        db.insert_sources(conn, sources)
+        db.insert_and_link_EOs(conn, comparator_eos)
     # connect evidence objects to support or disprove claims
+        # TODO
     # update gap severity - ✅
-        update_claim_status(conn, "CLAIM-006", "supported") # works
+        # update_claim_status(conn, "CLAIM-006", "supported") # works
     # build (traceable) report 
+
+    after = [db.count(t) for t in tables]
+    s = "----------------\n"
+    for i,t in enumerate(tables):
+        s += f"{t} inserted: {after[i] - before[i]}\n"
+    print(s)
 
 def build_gap_objects() -> list[Gaps.Gap]:
     gap_list = []
@@ -208,38 +193,33 @@ def build_gap_objects() -> list[Gaps.Gap]:
     gap_list.append(Gaps.Gap_006())
     return gap_list
 
-def build_EOs() -> list[dict]:
+def build_comparator_EOs(conn) -> tuple:
     POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
-    control_group_nctids = eos.get_nctids(POTENTIAL_CONTROL_GROUPS_QUERY_UID)
+    control_group_nctids = eos.get_nctids(conn, POTENTIAL_CONTROL_GROUPS_QUERY_UID)
     all_group_types = set(eos.GROUP_TYPES)
     evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(all_group_types)) 
 
-    with db.connect() as conn:
-        # build 'source' related to this aact query
-        sources = [
-            {
-                "url": "aact-db.ctti-clinicaltrials.org",
-                "title": "Potential Comparator Groups with Results",
-                "type": "AACT-CTTI query",
-                "uid": "SRC-101",
-                "how_to_recreate": "query tables design_groups and result_groups. Link by nct_id and title. This link is not enfored for all ctgov studies, but some studies follow it. Pull fields {nct_id, title, dg,id, rg,id, dg.group_type, rg.description}"
-            }
-        ]
-        db.insert_sources(conn, sources)
-
-        potential_control_groups = [{
-                # "uid": , 
-                "nct_id": evi["nct_id"],
-                "source_uids": ["SRC-101"],
-                "normalized_value": evi["group_type"],
-                "type": "potential_control_group",
-                "statement": json.dumps(evi, indent=2),
-                "confidence": "low" 
-            }
-            for evi in evidence_list]
-        db.insert_and_link_EOs(conn, potential_control_groups)
-
-    return []
+    # build 'source' related to this aact query
+    sources = [
+        {
+            "url": "aact-db.ctti-clinicaltrials.org",
+            "title": "Potential Comparator Groups with Results",
+            "type": "AACT-CTTI query",
+            "uid": "SRC-101",
+            "how_to_recreate": "query tables design_groups and result_groups. Link by nct_id and title. This link is not enfored for all ctgov studies, but some studies follow it. Pull fields {nct_id, title, dg,id, rg,id, dg.group_type, rg.description}"
+        }
+    ]
+    potential_control_groups = [{
+            # "uid": , TODO how can I derrive a stable human name...
+            "nct_id": evi["nct_id"],
+            "source_uids": ["SRC-101"],
+            "normalized_value": evi["group_type"],
+            "type": "potential_control_group",
+            "statement": json.dumps(evi, indent=2),
+            "confidence": "low" 
+        }
+        for evi in evidence_list]
+    return (sources, potential_control_groups)
 
 
 
@@ -262,18 +242,11 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
         gap_obj.set_severity_and_rationale(conn)
         db.update_gap(conn, gap_obj.to_dict())
 
-if __name__ == "__main__":
-    presets = load_presets()
-    params, preset_uid = parse_args(presets)
-    ingest_ctgov_studies(params, preset_uid)
+    
 
-    # ds = ctgov.fetch_all_nctids(params)
-    # nctids = []
-    # for d in ds:
-    #     nctids.append(d["protocolSection"]["identificationModule"]["nctId"])
-    # print(nctids)
-
-    # ingest_tracible_stack_test()
 
 def testing():
     print( db.query("SELECT COUNT(*) FROM sources")[0][0])
+
+if __name__ == "__main__":
+    build_traceable_stack()

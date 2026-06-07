@@ -1,19 +1,19 @@
 import backend_py.aact_ctti as aact
 import backend_py.db as db
 
-def get_nctids(query_uid: str) -> list[str]:
-    with db.connect() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-                SELECT studies.nct_id
-                FROM studies
-                JOIN study_queries ON studies.nct_id = study_queries.nct_id
-                WHERE study_queries.query_uid = ?
-            """,
-            (query_uid,)
-        )
-        r = [row[0] for row in cursor.fetchall()]
+def get_nctids(conn, query_uid: str) -> list[str]:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+            SELECT studies.nct_id
+            FROM studies
+            JOIN study_queries ON studies.nct_id = study_queries.nct_id
+            WHERE study_queries.query_uid = ?
+        """,
+        (query_uid,)
+    )
+    r = [row[0] for row in cursor.fetchall()]
+    cursor.close()
     return r
 
 GROUP_TYPES = ("ACTIVE_COMPARATOR", "EXPERIMENTAL", "NO_INTERVENTION", "OTHER", "PLACEBO_COMPARATOR", "SHAM_COMPARATOR")

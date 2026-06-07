@@ -176,31 +176,31 @@ def init_db() -> None:
         cursor.executescript(RELATIONSHIPS_SCHEMA)
     print(f"[db] initialized at {DB_PATH}")
 
-def upsert_studies(studies: list[dict], query: dict) -> int:
+def upsert_studies(conn, studies: list[dict], query: dict) -> int:
     # query requires {"uid": "...", "text": "..."}
-    with connect() as conn:
-        crsr = conn.cursor()
+    crsr = conn.cursor()
+    crsr.execute(
+        """
+        INSERT INTO queries (uid, text) VALUES (:uid, :text)
+        ON CONFLICT(uid) DO UPDATE SET text = excluded.text; -- add datetime of text update
+        """,
+        query
+    )
+    for study in studies:
+        cols = ", ".join(study.keys())
+        placeholders = ", ".join(f":{k}" for k in study.keys())
+        crsr.execute(
+            f"INSERT OR REPLACE INTO studies ({cols}) VALUES ({placeholders})",
+            study,
+        )
         crsr.execute(
             """
-            INSERT INTO queries (uid, text) VALUES (:uid, :text)
-            ON CONFLICT(uid) DO UPDATE SET text = excluded.text; -- add datetime of text update
+            INSERT INTO study_queries (nct_id, query_uid) VALUES (?, ?)
+            ON CONFLICT(nct_id, query_uid) DO NOTHING;
             """,
-            query
+            (study["nct_id"], query["uid"])
         )
-        for study in studies:
-            cols = ", ".join(study.keys())
-            placeholders = ", ".join(f":{k}" for k in study.keys())
-            crsr.execute(
-                f"INSERT OR REPLACE INTO studies ({cols}) VALUES ({placeholders})",
-                study,
-            )
-            crsr.execute(
-                """
-                INSERT INTO study_queries (nct_id, query_uid) VALUES (?, ?)
-                ON CONFLICT(nct_id, query_uid) DO NOTHING;
-                """,
-                (study["nct_id"], query["uid"])
-            )
+    crsr.close()
     return len(studies)
 
 def insert_queries(conn, queries: list[dict]) -> int:
@@ -372,8 +372,8 @@ def query(sql: str, params: tuple = (), conn = connect()) -> list[sqlite3.Row]:
     return cursor.fetchall()
 
 
-def count() -> int:
-    return query("SELECT COUNT(*) FROM studies")[0][0]
+def count(table = "studies") -> int:
+    return query(f"SELECT COUNT(*) FROM {table}")[0][0]
 
 
 def get_table_columns(conn, table_name: str) -> list[dict]:

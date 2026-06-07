@@ -18,9 +18,8 @@ backend:
 backend-py:
 	cd backend_py && uvicorn api:app --reload --port 8010
 
-# Ingest data: make ingest PRESET=oncology
 ingest:
-	python -m backend_py.ingest $(PRESET)
+	python -m backend_py.ingest 
 
 # Bootstrap the DataDictionary table from the current studies schema
 dataDict-init:
