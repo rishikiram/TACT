@@ -18,6 +18,7 @@ from backend_py.clean import clean_ctgov_studies
 import backend_py.ctgov as ctgov
 import backend_py.db as db
 import backend_py.gaps as Gaps
+import backend_py.evidence_objects as eos
 
 QUERIES_FILE = Path(__file__).parent / "queries_ctgov.yaml"
 REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
@@ -288,6 +289,27 @@ def build_gap_objects() -> list[Gaps.Gap]:
     gap_list.append(Gaps.Gap_006())
     return gap_list
 
+def build_EOs() -> list[dict]:
+    POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
+    control_group_nctids = eos.get_nctids(POTENTIAL_CONTROL_GROUPS_QUERY_UID)
+    not_experiemental = set(eos.GROUP_TYPES)
+    not_experiemental.remove("EXPERIMENTAL")
+
+    evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(not_experiemental)) # not experimental
+
+    potential_control_groups = [{
+        # "uid": , 
+        "source_uids": [evi.pop("nct_id")],
+        "normalized_value": evi.pop("group_type"),
+        "type": "potential_control_group",
+        "statement": json.dumps(evi),
+        "confidence": "low" 
+        }
+        for evi in evidence_list]
+    db.insert_and_link_EOs(potential_control_groups)
+
+    return []
+
 def update_claim_status(conn, claim_uid, support_status) -> None:
     cursor = conn.cursor()
     cursor.execute("UPDATE claims SET support_status = ? WHERE uid = ?", (support_status, claim_uid))
@@ -317,7 +339,7 @@ if __name__ == "__main__":
     # for d in ds:
     #     nctids.append(d["protocolSection"]["identificationModule"]["nctId"])
     # print(nctids)
-    
+
     # ingest_tracible_stack_test()
 
 def testing():

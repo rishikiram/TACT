@@ -201,7 +201,11 @@ def upsert_studies(studies: list[dict], query: dict) -> int:
             )
     return len(studies)
 
-def insert_sources(sources: list[dict]) -> int:
+def insert_queries(queries: list[dict]) -> int:
+    
+    return len(queries)
+
+def insert_sources(sources: list[dict], query_uid: str) -> int:
     with connect() as conn:
         crsr = conn.cursor()
         crsr.execute(
@@ -235,16 +239,19 @@ def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
             crsr.execute(
                 """
                 INSERT INTO evidence_objects (
-                    uid, type, statement,
+                    -- uid, 
+                    type, statement,
                     normalized_value, confidence
                 ) VALUES (
-                    :uid, :type, :statement,
+                    -- NULL, 
+                    :type, :statement,
                     :normalized_value, :confidence
-                )
+                ) RETURNING id;
                 """,
-                eo,
+                eo, # NOTE: uid is totally unused in EOs at the moment. uid's should be used as a stable naming scheme for human reference, but I'm not sure how to do that yet.
             )
-            eo_id = get_id(conn, "evidence_objects", eo["uid"])
+            eo_id = crsr.fetchall()[0][0]
+            print(eo_id)
             for source_uid in eo.get("source_uids", []):
                 source_id = get_id(conn, "sources", source_uid)
                 crsr.execute(
