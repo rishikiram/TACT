@@ -202,31 +202,38 @@ def upsert_studies(studies: list[dict], query: dict) -> int:
     return len(studies)
 
 def insert_queries(queries: list[dict]) -> int:
-    
-    return len(queries)
-
-def insert_sources(sources: list[dict], query_uid: str) -> int:
+    # Each dict: {uid, text}
+    allowed_cols = ("uid", "text")
     with connect() as conn:
         crsr = conn.cursor()
-        crsr.execute(
-            """
-            INSERT INTO queries (uid, text)
-            VALUES (:uid, :text)
-            ON CONFLICT(uid) 
-            DO UPDATE SET text = excluded.text;
-            """,
-
-        )
-        for source in sources:
+        for query in queries:
+            row = {k: query[k] for k in allowed_cols if k in query}
+            cols = ", ".join(row.keys())
+            placeholders = ", ".join(f":{k}" for k in row.keys())
             crsr.execute(
-                """
-                INSERT INTO sources (
-                    uid, type, title, url, target_evidence_types
-                ) VALUES (
-                    :uid, :type, :title, :url, :target_evidence_types
-                )
+                f"""
+                INSERT INTO queries ({cols})
+                VALUES ({placeholders})
+                ON CONFLICT(uid) DO UPDATE SET text = excluded.text;
                 """,
-                source
+                row,
+            )
+    return len(queries)
+
+def insert_sources(sources: list[dict]) -> int:
+    allowed_cols = ("uid", "type", "title", "url", "target_evidence_types")
+    with connect() as conn:
+        crsr = conn.cursor()
+        for source in sources:
+            row = {k: source[k] for k in allowed_cols if k in source}
+            cols = ", ".join(row.keys())
+            placeholders = ", ".join(f":{k}" for k in row.keys())
+            crsr.execute(
+                f"""
+                INSERT INTO queries ({cols})
+                VALUES ({placeholders});
+                """,
+                row,
             )
     return len(sources)
 

@@ -297,13 +297,21 @@ def build_EOs() -> list[dict]:
 
     evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(not_experiemental)) # not experimental
 
+    # add all sources
+    sources = []
+    for evi in evidence_list:
+        sources.append({
+            "url": evi["nct_id"]
+            # TODO
+        })
+
     potential_control_groups = [{
-        # "uid": , 
-        "source_uids": [evi.pop("nct_id")],
-        "normalized_value": evi.pop("group_type"),
-        "type": "potential_control_group",
-        "statement": json.dumps(evi),
-        "confidence": "low" 
+            # "uid": , 
+            "source_uids": [evi.pop("nct_id")],
+            "normalized_value": evi.pop("group_type"),
+            "type": "potential_control_group",
+            "statement": json.dumps(evi),
+            "confidence": "low" 
         }
         for evi in evidence_list]
     db.insert_and_link_EOs(potential_control_groups)
