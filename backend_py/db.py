@@ -54,10 +54,11 @@ CREATE TABLE IF NOT EXISTS studies (
 
 CREATE TABLE IF NOT EXISTS sources (
     id                      INTEGER PRIMARY KEY,
-    uid                     STRING UNIQUE,
+    uid                     TEXT UNIQUE,
     type                    TEXT,
     title                   TEXT,
     url                     TEXT,
+    how_to_recreate         TEXT,
     target_evidence_types   TEXT   -- JSON array for now -- this is how im imagining a user programaticaly allowing the repo to build the EOs
 );
 
@@ -69,16 +70,17 @@ CREATE TABLE IF NOT EXISTS queries (
 
 CREATE TABLE IF NOT EXISTS evidence_objects (
     id                      INTEGER PRIMARY KEY,
-    uid                     STRING UNIQUE,
+    uid                     TEXT UNIQUE,
+    nct_id                  TEXT, -- fk?
     type                    TEXT, -- could be turned into a fk with a set of options
-    statement               TEXT, 
+    statement               TEXT, -- maybe this should be called content?
     normalized_value        TEXT,
     confidence              TEXT -- could also be turned into a fk with a set of options
 );
 
 CREATE TABLE IF NOT EXISTS claims (
     id                      INTEGER PRIMARY KEY,
-    uid                     STRING UNIQUE,
+    uid                     TEXT UNIQUE,
     statement               TEXT,
     support_status          TEXT CHECK (support_status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[0]}',
     review_status           TEXT CHECK (review_status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
@@ -87,7 +89,7 @@ CREATE TABLE IF NOT EXISTS claims (
 
 CREATE TABLE IF NOT EXISTS requirements (
     id                      INTEGER PRIMARY KEY,
-    uid                     STRING UNIQUE,
+    uid                     TEXT UNIQUE,
     jurisdiction            TEXT,
     domain                  TEXT, -- could be fk enum
     requirement_text        TEXT
@@ -96,7 +98,7 @@ CREATE TABLE IF NOT EXISTS requirements (
 
 CREATE TABLE IF NOT EXISTS gaps (
     id                      INTEGER PRIMARY KEY,
-    uid                     STRING UNIQUE,
+    uid                     TEXT UNIQUE,
     requirement_id          INTEGER,
     rationale               TEXT,
     severity                TEXT CHECK (severity in ({allowed_gaps})),
@@ -201,75 +203,63 @@ def upsert_studies(studies: list[dict], query: dict) -> int:
             )
     return len(studies)
 
-def insert_queries(queries: list[dict]) -> int:
+def insert_queries(conn, queries: list[dict]) -> int:
     # Each dict: {uid, text}
     allowed_cols = ("uid", "text")
-    with connect() as conn:
-        crsr = conn.cursor()
-        for query in queries:
-            row = {k: query[k] for k in allowed_cols if k in query}
-            cols = ", ".join(row.keys())
-            placeholders = ", ".join(f":{k}" for k in row.keys())
-            crsr.execute(
-                f"""
-                INSERT INTO queries ({cols})
-                VALUES ({placeholders})
-                ON CONFLICT(uid) DO UPDATE SET text = excluded.text;
-                """,
-                row,
-            )
+    crsr = conn.cursor()
+    for query in queries:
+        row = {k: query[k] for k in allowed_cols if k in query}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
+        crsr.execute(
+            f"""
+            INSERT INTO queries ({cols})
+            VALUES ({placeholders})
+            ON CONFLICT(uid) DO UPDATE SET text = excluded.text;
+            """,
+            row,
+        )
     return len(queries)
 
-def insert_sources(sources: list[dict]) -> int:
+def insert_sources(conn, sources: list[dict]) -> int:
     allowed_cols = ("uid", "type", "title", "url", "target_evidence_types")
-    with connect() as conn:
-        crsr = conn.cursor()
-        for source in sources:
-            row = {k: source[k] for k in allowed_cols if k in source}
-            cols = ", ".join(row.keys())
-            placeholders = ", ".join(f":{k}" for k in row.keys())
-            crsr.execute(
-                f"""
-                INSERT INTO queries ({cols})
-                VALUES ({placeholders});
-                """,
-                row,
-            )
+    crsr = conn.cursor()
+    for source in sources:
+        row = {k: source[k] for k in allowed_cols if k in source}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
+        crsr.execute(
+            f"""
+            INSERT INTO sources ({cols})
+            VALUES ({placeholders});
+            """,
+            row,
+        )
     return len(sources)
 
-def insert_and_link_EOs(evidence_objs: list[dict]) -> int:
-    # TODO: shift pk generation to RDBM, and enable row replacement
+def insert_and_link_EOs(conn, evidence_objs: list[dict]) -> int:
     # Each dict: {uid, type, statement, normalized_value, confidence, source_uids: [...]}
-    with connect() as conn:
-        crsr = conn.cursor()
-        for eo in evidence_objs:
+    allowed_cols = ("uid", "type", "statement", "nct_id", "normalized_value", "confidence")
+    crsr = conn.cursor()
+    for eo in evidence_objs:
+        row = {k: eo[k] for k in allowed_cols if k in eo}
+        cols = ", ".join(row.keys())
+        placeholders = ", ".join(f":{k}" for k in row.keys())
+        crsr.execute(
+            f"INSERT INTO evidence_objects ({cols}) VALUES ({placeholders}) RETURNING id;",
+            row,
+        )
+        eo_id = crsr.fetchall()[0][0]
+        for source_uid in eo.get("source_uids", []):
+            source_id = get_id(conn, "sources", source_uid)
             crsr.execute(
                 """
-                INSERT INTO evidence_objects (
-                    -- uid, 
-                    type, statement,
-                    normalized_value, confidence
-                ) VALUES (
-                    -- NULL, 
-                    :type, :statement,
-                    :normalized_value, :confidence
-                ) RETURNING id;
+                INSERT OR IGNORE INTO evidence_object_sources (
+                    source_id, evidence_object_id
+                ) VALUES (?, ?)
                 """,
-                eo, # NOTE: uid is totally unused in EOs at the moment. uid's should be used as a stable naming scheme for human reference, but I'm not sure how to do that yet.
+                (source_id, eo_id),
             )
-            eo_id = crsr.fetchall()[0][0]
-            print(eo_id)
-            for source_uid in eo.get("source_uids", []):
-                source_id = get_id(conn, "sources", source_uid)
-                crsr.execute(
-                    """
-                    INSERT OR IGNORE INTO evidence_object_sources (
-                        source_id, evidence_object_id
-                    ) VALUES (?, ?)
-                    """,
-                    (source_id, eo_id),
-                )
-        # conn.commit()
     return len(evidence_objs)
 
 def insert_claims(conn, claims: list[dict]) -> int:

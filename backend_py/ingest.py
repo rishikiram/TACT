@@ -72,87 +72,6 @@ def ingest_ctgov_studies(params: dict, query_uid: str) -> None:
     print(f"[ingest] done — db grew from {before} → {after} studies")
 
 
-def ingest_tracible_stack_test() -> None:
-    db.init_db()
-
-    sources_before = db.query("SELECT COUNT(*) FROM sources")[0][0]
-    EOs_before = db.query("SELECT COUNT(*) FROM evidence_objects")[0][0]
-    claims_before = db.query("SELECT COUNT(*) FROM claims")[0][0]
-    requirements_before = db.query("SELECT COUNT(*) FROM requirements")[0][0]
-    gaps_before = db.query("SELECT COUNT(*) FROM gaps")[0][0]
-
-    with db.connect() as conn:
-        target_evidence_types = ["design", "population", "endpoints", "comparator status"]
-        db.insert_sources([
-            {
-                "uid": "SRC-002", 
-                "type": "simulated internal document", 
-                "title": "VER-101 Phase II protocol synopsis",
-                "url": "file://First Example NSCLC Case Skeleton_27May2026.pdf",
-                "target_evidence_types": json.dumps(target_evidence_types)
-            }
-        ])
-
-        db.insert_and_link_EOs([
-            {
-                "uid": "EO-003",
-                "type": "comparator", 
-                "statement": "No randomized comparator arm is included", 
-                "normalized_value": "No head-to-head comparator",
-                "confidence":  "high",
-                "source_uids": ["SRC-002"]
-            }
-        ])
-
-        db.insert_and_link_claims([
-            {
-                "uid": "CLAIM-002",
-                "statement": "VER-101 improves progression-free survival versus current standard of care.",
-                "support_status": "unsupported",
-                "review_status": "needs_review",
-                "risk_note": "No randomized comparator and no comparative PFS estimate.",
-                "evidence_object_uids": ["EO-003"] #,5]
-            }
-        ])
-
-        potential_gaps = ["comparator uncertainty"]
-        db.insert_requirements(conn, [
-            {
-                "uid": "REQ-NICE-001",
-                "jurisdiction": "NICE/England",
-                "domain": "comparator",
-                "requirement_text": "Evidence should support relative clinical effectiveness against a relevant comparator.",
-                "potential_gaps": json.dumps(potential_gaps)
-            }
-        ])
-        db.insert_and_link_gaps(conn, [
-            {
-                "uid": "GAP-001",
-                "type": "comparator uncertainty",
-                "severity": "high",
-                "jurisdiction": "NICE/England",
-                "rationale": "no randomized comparator",
-                "recommended_action": "Assess indirect comparison feasibility and RWE augmentation plan.",
-                "claim_uid_requirement_uid_trios": [("CLAIM-002", "REQ-NICE-001")]
-            }
-        ])
-
-    sources_after = db.query("SELECT COUNT(*) FROM sources")[0][0]
-    EOs_after = db.query("SELECT COUNT(*) FROM evidence_objects")[0][0]
-    claims_after = db.query("SELECT COUNT(*) FROM claims")[0][0]
-    requirements_after = db.query("SELECT COUNT(*) FROM requirements")[0][0]
-    gaps_after = db.query("SELECT COUNT(*) FROM gaps")[0][0]
-
-    
-    print(
-        "----------------\n"
-        f"Sources inserted: {sources_after - sources_before}\n"
-        f"EOs inserted: {EOs_after - EOs_before}\n"
-        f"Claims inserted: {claims_after - claims_before}\n"
-        f"Requirements inserted: {requirements_after - requirements_before}\n"
-        f"Gaps inserted: {gaps_after - gaps_before}"
-    )
-
 def ingest_tracible_stack() -> None:
     db.init_db()
 
@@ -164,7 +83,7 @@ def ingest_tracible_stack() -> None:
 
     with db.connect() as conn:
         target_evidence_types = ["design", "population", "endpoints", "comparator status"]
-        db.insert_sources([
+        db.insert_sources(conn, [
             {
                 "uid": "SRC-002", 
                 "type": "simulated internal document", 
@@ -174,7 +93,7 @@ def ingest_tracible_stack() -> None:
             }
         ])
 
-        db.insert_and_link_EOs([
+        db.insert_and_link_EOs(conn, [
             {
                 "uid": "EO-003",
                 "type": "comparator", 
@@ -292,31 +211,37 @@ def build_gap_objects() -> list[Gaps.Gap]:
 def build_EOs() -> list[dict]:
     POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
     control_group_nctids = eos.get_nctids(POTENTIAL_CONTROL_GROUPS_QUERY_UID)
-    not_experiemental = set(eos.GROUP_TYPES)
-    not_experiemental.remove("EXPERIMENTAL")
+    all_group_types = set(eos.GROUP_TYPES)
+    evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(all_group_types)) 
 
-    evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(not_experiemental)) # not experimental
+    with db.connect() as conn:
+        # build 'source' related to this aact query
+        sources = [
+            {
+                "url": "aact-db.ctti-clinicaltrials.org",
+                "title": "Potential Comparator Groups with Results",
+                "type": "AACT-CTTI query",
+                "uid": "SRC-101",
+                "how_to_recreate": "query tables design_groups and result_groups. Link by nct_id and title. This link is not enfored for all ctgov studies, but some studies follow it. Pull fields {nct_id, title, dg,id, rg,id, dg.group_type, rg.description}"
+            }
+        ]
+        db.insert_sources(conn, sources)
 
-    # add all sources
-    sources = []
-    for evi in evidence_list:
-        sources.append({
-            "url": evi["nct_id"]
-            # TODO
-        })
-
-    potential_control_groups = [{
-            # "uid": , 
-            "source_uids": [evi.pop("nct_id")],
-            "normalized_value": evi.pop("group_type"),
-            "type": "potential_control_group",
-            "statement": json.dumps(evi),
-            "confidence": "low" 
-        }
-        for evi in evidence_list]
-    db.insert_and_link_EOs(potential_control_groups)
+        potential_control_groups = [{
+                # "uid": , 
+                "nct_id": evi["nct_id"],
+                "source_uids": ["SRC-101"],
+                "normalized_value": evi["group_type"],
+                "type": "potential_control_group",
+                "statement": json.dumps(evi, indent=2),
+                "confidence": "low" 
+            }
+            for evi in evidence_list]
+        db.insert_and_link_EOs(conn, potential_control_groups)
 
     return []
+
+
 
 def update_claim_status(conn, claim_uid, support_status) -> None:
     cursor = conn.cursor()
