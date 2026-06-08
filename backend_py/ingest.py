@@ -170,9 +170,9 @@ def build_traceable_stack() -> None:
         sources, comparator_eos = build_comparator_EOs(conn)
         print(len(sources), len(comparator_eos))
         db.insert_sources(conn, sources)
-        db.insert_and_link_EOs(conn, comparator_eos)
+        eo_ids = db.insert_and_link_EOs(conn, comparator_eos)
     # connect evidence objects to support or disprove claims
-        # TODO
+        db.link_EOs_to_claims_of_type(conn, eo_ids, "comparator")
     # update gap severity - ✅
         # update_claim_status(conn, "CLAIM-006", "supported") # works
     # build (traceable) report 
@@ -214,7 +214,7 @@ def build_comparator_EOs(conn) -> tuple:
             "nct_id": evi["nct_id"],
             "source_uids": ["SRC-101"],
             "normalized_value": evi["group_type"],
-            "type": "potential_control_group",
+            "type": "comparator", # TODO use a standard enumerator somehow
             "statement": json.dumps(evi, indent=2),
             "confidence": "low" 
         }

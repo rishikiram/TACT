@@ -7,6 +7,7 @@ CLAIM_STATUS_ENUM: tuple = ("assumption", "unsupported", "partially supported", 
 allowed_claim_status = ", ".join(f"'{s}'" for s in CLAIM_STATUS_ENUM)
 CLAIM_REVIEW_STATUS_ENUM: tuple = ("ai_draft", "needs_review", "accepted", "rejected", "revised")
 allowed_claim_review_status = ", ".join(f"'{s}'" for s in CLAIM_REVIEW_STATUS_ENUM)
+CLAIM_EO_TYPES_ENUM: tuple = ("comparator",)
 
 GAP_SEVERITY_ENUM: tuple = ("no data", "non-conclusive", "high", "medium", "low", "zero")
 allowed_gaps = ", ".join(f"'{s}'" for s in GAP_SEVERITY_ENUM)
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS evidence_objects (
 CREATE TABLE IF NOT EXISTS claims (
     id                      INTEGER PRIMARY KEY,
     uid                     TEXT UNIQUE,
+    type                    TEXT,
     statement               TEXT,
     support_status          TEXT CHECK (support_status IN ({allowed_claim_status})) DEFAULT '{CLAIM_STATUS_ENUM[0]}',
     review_status           TEXT CHECK (review_status in ({allowed_claim_review_status})) DEFAULT '{CLAIM_REVIEW_STATUS_ENUM[1]}',
@@ -135,6 +137,7 @@ CREATE TABLE IF NOT EXISTS evidence_object_sources (
 CREATE TABLE IF NOT EXISTS claim_evidence_objects (
     claim_id                INTEGER,
     evidence_object_id      INTEGER,
+    is_verified             BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (claim_id, evidence_object_id),
     FOREIGN KEY (claim_id)
         REFERENCES claims(id),
@@ -237,10 +240,12 @@ def insert_sources(conn, sources: list[dict]) -> int:
         )
     return len(sources)
 
-def insert_and_link_EOs(conn, evidence_objs: list[dict]) -> int:
+def insert_and_link_EOs(conn, evidence_objs: list[dict]) -> list:
     # Each dict: {uid, type, statement, normalized_value, confidence, source_uids: [...]}
     allowed_cols = ("uid", "type", "statement", "nct_id", "normalized_value", "confidence")
     crsr = conn.cursor()
+    eo_ids = [-1] * len(evidence_objs)
+    i = 0
     for eo in evidence_objs:
         row = {k: eo[k] for k in allowed_cols if k in eo}
         cols = ", ".join(row.keys())
@@ -250,6 +255,8 @@ def insert_and_link_EOs(conn, evidence_objs: list[dict]) -> int:
             row,
         )
         eo_id = crsr.fetchall()[0][0]
+        eo_ids[i] = eo_id
+        i+=1
         for source_uid in eo.get("source_uids", []):
             source_id = get_id(conn, "sources", source_uid)
             crsr.execute(
@@ -260,11 +267,11 @@ def insert_and_link_EOs(conn, evidence_objs: list[dict]) -> int:
                 """,
                 (source_id, eo_id),
             )
-    return len(evidence_objs)
+    return eo_ids
 
 def insert_claims(conn, claims: list[dict]) -> int:
     # Each dict: {uid, statement, support_status, review_status, risk_note,}
-    allowed_cols = ("uid", "statement", "support_status", "review_status", "risk_note")
+    allowed_cols = ("uid", "statement", "type", "support_status", "review_status", "risk_note")
     crsr = conn.cursor()
     for claim in claims:
         row = {k: claim[k] for k in allowed_cols if k in claim}
@@ -279,23 +286,40 @@ def insert_claims(conn, claims: list[dict]) -> int:
         )
     return len(claims)
 
-def insert_and_link_claims(claims: list[dict]) -> int:
-    # Each dict: {uid, statement, status, risk_note, evidence_object_uids: [...]}
-    with connect() as conn:
-        insert_claims(conn, claims)
-        crsr = conn.cursor()
-        for claim in claims:
-            claim_id = get_id(conn, "claims", claim["uid"])
-            for eo_uid in claim.get("evidence_object_uids", []):
-                eo_id = get_id(conn, "evidence_objects", eo_uid)
-                crsr.execute(
+def link_EOs_to_claims_of_type(conn, eo_ids: list, claim_type: str) -> int:
+    cursor = conn.cursor()
+    temp = query("SELECT id FROM claims WHERE type = ?", (claim_type,), conn=conn)
+    claim_ids = [row[0] for row in temp]
+    i = 0
+    for eo_id in eo_ids:
+        for claim_id in claim_ids:
+            cursor.execute(
                     """
-                    INSERT INTO claim_evidence_objects (
-                        claim_id, evidence_object_id
+                    INSERT OR IGNORE INTO claim_evidence_objects (
+                        evidence_object_id, claim_id
                     ) VALUES (?, ?)
                     """,
-                    (claim_id, eo_id),
+                    (eo_id, claim_id)
                 )
+            i += 1
+    return i
+
+def insert_and_link_claims(conn, claims: list[dict]) -> int:
+    # Each dict: {uid, statement, status, risk_note, evidence_object_uids: [...]}
+    insert_claims(conn, claims)
+    crsr = conn.cursor()
+    for claim in claims:
+        claim_id = get_id(conn, "claims", claim["uid"])
+        for eo_uid in claim.get("evidence_object_uids", []):
+            eo_id = get_id(conn, "evidence_objects", eo_uid)
+            crsr.execute(
+                """
+                INSERT INTO claim_evidence_objects (
+                    claim_id, evidence_object_id
+                ) VALUES (?, ?)
+                """,
+                (claim_id, eo_id),
+            )
     return len(claims)
 
 def insert_requirements(conn, requirements: list[dict]) -> int:
@@ -367,9 +391,16 @@ def update_gap(conn, gap) -> None:
     )
 
 def query(sql: str, params: tuple = (), conn = connect()) -> list[sqlite3.Row]:
+    # TODO, does this cause a connection to never close?
     cursor = conn.cursor()
     cursor.execute(sql, params)
     return cursor.fetchall()
+# def query(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
+#     # TODO, does this cause a connection to never close?
+#     with connect() as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(sql, params)
+#         return cursor.fetchall()
 
 
 def count(table = "studies") -> int:

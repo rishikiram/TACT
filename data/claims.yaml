@@ -1,11 +1,15 @@
 CLAIM-006:
   statement: VER-101 gives better outcomes than standard-of-care comparator
+  type: comparator
 CLAIM-007:
   statement: VER-101 gives better outcomes than direct comparator
+  type: comparator
 CLAIM-008:
   statement: VER-101 gives better outcomes than placebo comparator
+  type: comparator
 CLAIM-009:
   statement: VER-101 gives better outcomes than indirect comparator
+  type: comparator
 CLAIM-001:
   statement: VER-101 demonstrates clinically meaningful tumor response in 2L KRAS G12C-positive metastatic NSCLC.
 CLAIM-002:
