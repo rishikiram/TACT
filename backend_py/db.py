@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS evidence_objects (
     type                    TEXT, -- could be turned into a fk with a set of options
     statement               TEXT, -- maybe this should be called content?
     normalized_value        TEXT,
-    confidence              TEXT -- could also be turned into a fk with a set of options
+    confidence              TEXT
 );
 
 CREATE TABLE IF NOT EXISTS claims (
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS gaps (
 RELATIONSHIPS_SCHEMA = """
 -- Many to many 
 CREATE TABLE IF NOT EXISTS study_queries (
-    nct_id               INTEGER,
+    nct_id                  TEXT,
     query_uid               TEXT,
     PRIMARY KEY (nct_id, query_uid),
     FOREIGN KEY (nct_id)
