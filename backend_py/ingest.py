@@ -43,7 +43,7 @@ def ingest_ctgov_studies(conn, query_uid: str, params: dict) -> None:
     # after = db.count()
     # print(f"[ingest] done — db grew from {before} → {after} studies")
 
-def ingest_tracible_stack() -> None:
+def ingest_tracible_stack_test() -> None:
     db.init_db()
 
     sources_before = db.query("SELECT COUNT(*) FROM sources")[0][0]

@@ -225,7 +225,7 @@ def insert_queries(conn, queries: list[dict]) -> int:
     return len(queries)
 
 def insert_sources(conn, sources: list[dict]) -> int:
-    allowed_cols = ("uid", "type", "title", "url", "target_evidence_types")
+    allowed_cols = ("uid", "type", "title", "url", "target_evidence_types", "how_to_recreate")
     crsr = conn.cursor()
     for source in sources:
         row = {k: source[k] for k in allowed_cols if k in source}
