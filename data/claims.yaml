@@ -1,34 +1,67 @@
-CLAIM-006:
+claims:
+- uid: CLAIM-006
   statement: VER-101 gives better outcomes than standard-of-care comparator
   type: comparator
-CLAIM-007:
+
+- uid: CLAIM-007
   statement: VER-101 gives better outcomes than direct comparator
   type: comparator
-CLAIM-008:
+
+- uid: CLAIM-008
   statement: VER-101 gives better outcomes than placebo comparator
   type: comparator
-CLAIM-009:
+
+- uid: CLAIM-009
   statement: VER-101 gives better outcomes than indirect comparator
   type: comparator
-CLAIM-001:
+
+- uid: CLAIM-001
   statement: VER-101 demonstrates clinically meaningful tumor response in 2L KRAS G12C-positive metastatic NSCLC.
-CLAIM-002:
+  risk_note: Single-arm ORR supports observed response but not comparative access claims.
+  evidence_object_uids:
+  - EO-004
+
+- uid: CLAIM-002
   statement: VER-101 improves progression-free survival versus current standard of care.
-CLAIM-010:
+  risk_note: No randomized comparator and no comparative PFS estimate.
+  evidence_object_uids:
+  - EO-003
+  - EO-005
+
+- uid: CLAIM-010
   statement: VER-101 improves overall survival.
-CLAIM-003:
+
+- uid: CLAIM-003
   statement: VER-101 offers manageable safety and oral convenience.
-CLAIM-004:
+  risk_note: Early safety and oral modality support a cautious statement, but comparative safety is unknown.
+  evidence_object_uids:
+  - EO-008
+  - EO-011
+
+- uid: CLAIM-004
   statement: VER-101 improves patient quality of life.
-CLAIM-011:
+  risk_note: PROs are exploratory, incomplete, and not sufficient for a strong QoL improvement claim.
+  evidence_object_uids:
+  - EO-007
+
+- uid: CLAIM-011
   statement: Patient Reported Outcomes support Quality of Life improvements.
-CLAIM-005:
+
+- uid: CLAIM-005
   statement: VER-101's realted biomarker-defined population is clearly specified.
-CLAIM-014:
+  risk_note: Population is defined, but testing pathway and comparative positioning remain uncertain.
+  evidence_object_uids:
+  - EO-002
+  - EO-009
+
+- uid: CLAIM-014
   statement: VER-101 biomarker testing pathway or assay assumptions are defined.
-CLAIM-015:
+
+- uid: CLAIM-015
   statement: VER-101 subgroup analysis is sufficiently supported.
-CLAIM-012:
+
+- uid: CLAIM-012
   statement: VER-101 produced a manageable amount adverse events.
-CLAIM-013:
+
+- uid: CLAIM-013
   statement: An economic model or cost assesment has been developed

@@ -23,6 +23,8 @@ import backend_py.evidence_objects as eos
 QUERIES_FILE = Path(__file__).parent / "queries_ctgov.yaml"
 REQUIREMENTS_FILE = Path(__file__).parent.parent / "data" / "requirements.yaml"
 CLAIMS_FILE = Path(__file__).parent.parent / "data" / "claims.yaml"
+EOS_FILE = Path(__file__).parent.parent / "data" / "evidence_objects.yaml"
+SOURCES_FILE = Path(__file__).parent.parent / "data" / "sources.yaml"
 
 
 def ingest_ctgov_studies(conn, query_uid: str, params: dict) -> None:
@@ -75,18 +77,10 @@ def ingest_tracible_stack_test() -> None:
             }
         ])
         
-        claims_yaml = Path(__file__).parent.parent / "data" / "claims.yaml"
-        with open(claims_yaml) as f:
-            data = yaml.safe_load(f)
-        claims = []
-        for column_name, ann in data.items():
-            claims.append({
-                "uid": column_name,
-                "statement": ann.get("statement"),
-                "support_status": "unsupported",
-                "review_status": "needs_review",
-                "risk_note": "need note"
-            })
+        with open(CLAIMS_FILE) as f:
+            claims_data = yaml.safe_load(f)
+        claims = next(iter(claims_data.values())) # get first value of {key:value} pairs
+        claims.sort(key=lambda f: f["uid"])
         db.insert_claims(conn, claims)
 
         potential_gaps = ["comparator uncertainty"]
@@ -134,24 +128,33 @@ def build_traceable_stack() -> None:
     before = [db.count(t) for t in tables]
 
     with db.connect() as conn:
+        # ingest manual EOs
+        with open(SOURCES_FILE) as f:
+            sources_data = yaml.safe_load(f)
+        sources = next(iter(sources_data.values()))
+        sources.sort(key=lambda f: f["uid"])
+        db.insert_sources(conn, sources)
+
+        # ingest manual EOs
+        with open(EOS_FILE) as f:
+            eos_data = yaml.safe_load(f)
+        eos = next(iter(eos_data.values()))
+        eos.sort(key=lambda f: f["uid"])
+        db.insert_and_link_EOs(conn, eos)
+
         # ingest requirements
         with open(REQUIREMENTS_FILE) as f:
             reqs_data = yaml.safe_load(f)
-        requirements = []
-        for uid,fields in reqs_data.items():
-            requirements.append(fields)
-            fields["uid"] = uid
+        requirements = next(iter(reqs_data.values()))
+        requirements.sort(key=lambda f: f["uid"])
         db.insert_requirements(conn, requirements)
 
         # build potential gaps, and claims that determine the gaps
         with open(CLAIMS_FILE) as f:
             claims_data = yaml.safe_load(f)
-        claims = []
-        for uid,fields in claims_data.items():
-            fields["uid"] = uid
-            claims.append(fields)
+        claims = next(iter(claims_data.values())) 
         claims.sort(key=lambda f: f["uid"])
-        db.insert_claims(conn, claims)
+        db.insert_and_link_claims(conn, claims)
 
         gap_objs = build_gap_objects()
         gaps = []
@@ -166,13 +169,15 @@ def build_traceable_stack() -> None:
         for uid,params in queries.items():
             ingest_ctgov_studies(conn, uid, params)
 
-    # extract exhaustive set of evidence objects
+    # generate set of evidence objects from historical data
         sources, comparator_eos = build_comparator_EOs(conn)
         print(len(sources), len(comparator_eos))
         db.insert_sources(conn, sources)
         eo_ids = db.insert_and_link_EOs(conn, comparator_eos)
+
     # connect evidence objects to support or disprove claims
         db.link_EOs_to_claims_of_type(conn, eo_ids, "comparator")
+
     # update gap severity - ✅
         # update_claim_status(conn, "CLAIM-006", "supported") # works
     # build (traceable) report 

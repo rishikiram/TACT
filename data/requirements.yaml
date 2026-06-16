@@ -1,4 +1,5 @@
-REQ-NICE-COMP-001:
+requirements:
+- uid: REQ-NICE-COMP-001
   jurisdiction: NICE/England
   domain: Comparator
   requirement_text: Comparative access claims should be supported by evidence against a relevant comparator or by a justified indirect comparison.
@@ -9,7 +10,7 @@ REQ-NICE-COMP-001:
   - CLAIM-007
   - CLAIM-008
   - CLAIM-009
-REQ-US-COMP-001:
+- uid: REQ-US-COMP-001
   jurisdiction: U.S. payer evidence-risk archetype
   domain: Comparator
   requirement_text: Comparative clinical claims carry higher evidence risk when no head-to-head or credible indirect comparison exists.
@@ -21,7 +22,7 @@ REQ-US-COMP-001:
   - CLAIM-008
   - CLAIM-009
 
-REQ-NICE-ENDPT-001:
+- uid: REQ-NICE-ENDPT-001
   jurisdiction: NICE/England
   domain: Endpoint Maturity
   requirement_text: Survival, durability, and patient-relevant outcomes should be sufficiently mature to support value claims.
@@ -31,7 +32,7 @@ REQ-NICE-ENDPT-001:
   - CLAIM-001
   - CLAIM-002
   - CLAIM-010
-REQ-US-ENDPT-001:
+- uid: REQ-US-ENDPT-001
   jurisdiction: U.S. payer evidence-risk archetype
   domain: Endpoint Maturity
   requirement_text: Evidence risk increases when claims rely primarily on ORR or immature survival data.
@@ -42,7 +43,7 @@ REQ-US-ENDPT-001:
   - CLAIM-002
   - CLAIM-010
 
-REQ-NICE-QOL-001:
+- uid: REQ-NICE-QOL-001
   jurisdiction: NICE/England
   domain: QoL/PRO
   requirement_text: Quality-of-life or patient-relevant outcome evidence should be available when survival benefit is uncertain or immature.
@@ -52,7 +53,7 @@ REQ-NICE-QOL-001:
   - CLAIM-003
   - CLAIM-004
   - CLAIM-011
-REQ-US-QOL-001:
+- uid: REQ-US-QOL-001
   jurisdiction: U.S. payer evidence-risk archetype
   domain: QoL/PRO
   requirement_text: Quality-of-life improvement claims should be supported by prespecified, interpretable, and sufficiently complete patient-reported outcome evidence.
@@ -63,7 +64,7 @@ REQ-US-QOL-001:
   - CLAIM-004
   - CLAIM-011
 
-REQ-US-BIOMARKER-001:
+- uid: REQ-US-BIOMARKER-001
   jurisdiction: U.S. payer evidence-risk archetype
   domain: Biomarker
   requirement_text: Biomarker-defined access claims should include clear population definition, testing assumptions, and subgroup support.
@@ -73,7 +74,7 @@ REQ-US-BIOMARKER-001:
   - CLAIM-005
   - CLAIM-014
   - CLAIM-015
-REQ-NICE-POP-001:
+- uid: REQ-NICE-POP-001
   jurisdiction: NICE/England
   domain: Population
   requirement_text: The evaluated population should align clearly with the proposed indication and relevant clinical practice population.
@@ -82,21 +83,21 @@ REQ-NICE-POP-001:
   claim_uids:
   - CLAIM-005
 
-REQ-CLAIM-SUPPORT-001:
+- uid: REQ-CLAIM-SUPPORT-001
   jurisdiction: Cross-jurisdiction
   domain: Claim support
   requirement_text: Each draft claim should be classified as supported, partially supported, unsupported, or assumption based on linked evidence.
   potential_gaps: Unsupported claim gap
   contractor_note: This is a general validation requirement.
   claim_uids: []
-REQ-CLAIM-COMP-001:
+- uid: REQ-CLAIM-COMP-001
   jurisdiction: Cross-jurisdiction
   domain: Comparative claim support
   requirement_text: Superiority or comparative benefit claims require comparator-linked evidence.
   potential_gaps: Unsupported comparative claim gap
   contractor_note: Should flag claims like improved PFS versus standard of care if no comparator evidence exists.
   claim_uids: []
-REQ-SAFETY-001:
+- uid: REQ-SAFETY-001
   jurisdiction: Cross-jurisdiction
   domain: Safety
   requirement_text: Safety and tolerability claims should be supported by observed adverse event data and should distinguish early evidence from mature safety evidence.
@@ -104,7 +105,7 @@ REQ-SAFETY-001:
   contractor_note: Allows cautious support for early safety while flagging maturity limits.
   claim_uids: []
 
-REQ-NICE-ECON-001:
+- uid: REQ-NICE-ECON-001
   jurisdiction: NICE/England
   domain: Economic evidence
   requirement_text: Cost-effectiveness assessment requires inputs for comparative effectiveness, survival, quality of life, treatment duration, safety, and resource use.
@@ -112,7 +113,7 @@ REQ-NICE-ECON-001:
   contractor_note: Should trigger if economic inputs are unavailable or underdeveloped.
   claim_uids:
   - CLAIM-013
-REQ-US-ECON-001:
+- uid: REQ-US-ECON-001
   jurisdiction: U.S. payer evidence-risk archetype
   domain: Economic evidence
   requirement_text: Evidence packages should identify likely budget impact, eligible population, treatment duration, and comparator assumptions.
@@ -121,24 +122,24 @@ REQ-US-ECON-001:
   claim_uids:
   - CLAIM-013
 
-REQ-TRACE-001:
+- uid: REQ-TRACE-001
   jurisdiction: Cross-jurisdiction
   domain: Traceability
   requirement_text: Each claim, gap, and handoff statement should link to a source, evidence object, requirement, or explicit assumption.
   potential_gaps: Source traceability gap
   contractor_note: Mandatory validation requirement.
   claim_uids: []
-REQ-ASSUMPTION-001:
+- uid: REQ-ASSUMPTION-001
   jurisdiction: Cross-jurisdiction
   domain: Assumption control
   requirement_text: Any conclusion not directly supported by source evidence should be labeled as an assumption or reviewer judgment.
   potential_gaps: Unsupported inference gap
   contractor_note: Mandatory hallucination/inference control requirement.
   claim_uids: []
-REQ-REVIEW-001:
+- uid: REQ-REVIEW-001
   jurisdiction: Cross-jurisdiction
   domain: Human review
   requirement_text: Claims, gaps, requirement matches, and evidence actions should include a review status and reviewer rationale field.
   potential_gaps: Reviewability gap
-  contractor_note: Required to distinguish system-generated draft outputs from accepted reviewer conclusions.
+  contractor_note: required to distinguish system-generated draft outputs from accepted reviewer conclusions.
   claim_uids: []
