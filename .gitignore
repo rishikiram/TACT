@@ -24,6 +24,7 @@ __pycache__/
 data/*.db
 data/*.db-*
 data/exports
+data/nsclc_ppp.json
 
 figures/
 
