@@ -173,7 +173,7 @@ def build_traceable_stack() -> None:
                 ingest_ctgov_studies(conn, uid, params)
 
     # generate set of evidence objects from historical data
-        sources, comparator_eos = build_comparator_EOs(conn)
+        sources, comparator_eos = build_comparator_EOs(conn, "nsclc_2line") # NOTE: hardcoded
         print(len(sources), len(comparator_eos))
         db.insert_sources(conn, sources)
         eo_ids = db.insert_and_link_EOs(conn, comparator_eos)
@@ -201,9 +201,16 @@ def build_gap_objects() -> list[Gaps.Gap]:
     gap_list.append(Gaps.Gap_006())
     return gap_list
 
-def build_comparator_EOs(conn) -> tuple:
-    POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
-    control_group_nctids = eos.get_nctids(conn, POTENTIAL_CONTROL_GROUPS_QUERY_UID)
+def build_comparator_EOs(conn, query_uid) -> tuple:
+    """
+        Args:
+            conn: connection to database 
+            query_uid: uid of the query that is associsated with a set of CTGov studies. 
+                These are the studies used when extracting trial arms for potential comparators
+    """
+
+    # POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
+    control_group_nctids = eos.get_nctids(conn, query_uid)
     all_group_types = set(eos.GROUP_TYPES)
     evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(all_group_types)) 
 
@@ -258,69 +265,37 @@ def build_traceable_stack_v2() -> None:
     before = [db.count(t) for t in tables]
 
     with db.connect() as conn:
-        # ingest manual EOs
-        with open(SOURCES_FILE) as f:
-            sources_data = yaml.safe_load(f)
-        sources = next(iter(sources_data.values()))
-        sources.sort(key=lambda f: f["uid"])
-        db.insert_sources(conn, sources)
-
-        # ingest manual EOs
-        with open(EOS_FILE) as f:
-            eos_data = yaml.safe_load(f)
-        eos = next(iter(eos_data.values()))
-        eos.sort(key=lambda f: f["uid"])
-        db.insert_and_link_EOs(conn, eos)
-
-        # ingest requirements
-        with open(REQUIREMENTS_FILE) as f:
-            reqs_data = yaml.safe_load(f)
-        requirements = next(iter(reqs_data.values()))
-        requirements.sort(key=lambda f: f["uid"])
-        db.insert_requirements(conn, requirements)
-
-        # build potential gaps, and claims that determine the gaps
-        with open(CLAIMS_FILE) as f:
-            claims_data = yaml.safe_load(f)
-        claims = next(iter(claims_data.values())) 
-        claims.sort(key=lambda f: f["uid"])
-        db.insert_and_link_claims(conn, claims)
-
-        gap_objs = build_gap_objects()
-        gaps = []
-        for g in gap_objs:
-            g.set_severity_and_rationale(conn)
-            gaps.append(g.to_dict())
-        db.insert_and_link_gaps(conn, gaps)
         
     # ingest sources
+        queries_to_use = ["nsclc_ppp"]
+        print("Using queries: ", queries_to_use)
         with open(QUERIES_FILE) as f:
             queries = yaml.safe_load(f)
         for uid,params in queries.items():
-            if uid in ["nsclc_kras", "nsclc_2line"]:
+            if uid in queries_to_use:
                 ingest_ctgov_studies(conn, uid, params)
 
     # generate set of evidence objects from historical data
-        sources, comparator_eos = build_comparator_EOs(conn)
+        sources, comparator_eos = build_comparator_EOs(conn, "nsclc_ppp")
         print(len(sources), len(comparator_eos))
         db.insert_sources(conn, sources)
         eo_ids = db.insert_and_link_EOs(conn, comparator_eos)
 
     # connect evidence objects to support or disprove claims
-        db.link_EOs_to_claims_of_type(conn, eo_ids, "comparator")
+        # TODO, do I want this?
+        # db.link_EOs_to_claims_of_type(conn, eo_ids, "comparator")
 
-    # update gap severity - ✅
-        # update_claim_status(conn, "CLAIM-006", "supported") # works
     # build (traceable) report 
 
     after = [db.count(t) for t in tables]
     s = "----------------\n"
     for i,t in enumerate(tables):
-        s += f"{t} inserted: {after[i] - before[i]}\n"
+        if not (after[i] == before[i]):
+            s += f"{t} inserted: {after[i] - before[i]}\n"
     print(s)
 
 def testing():
     print( db.query("SELECT COUNT(*) FROM sources")[0][0])
 
 if __name__ == "__main__":
-    build_traceable_stack()
+    build_traceable_stack_v2()
