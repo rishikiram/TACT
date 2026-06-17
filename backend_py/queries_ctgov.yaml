@@ -30,6 +30,11 @@ nsclc_2line:
   query.cond: '"metastatic NSCLC" OR "metastatic non-small cell lung cancer"'
   query.term: '"second line" OR "second-line" OR "previously treated"'
 
+nsclc_PPP:
+  query.cond: Non-small Cell Lung Cancer
+  query.intr: pembrolizumab platinum pemetrexed
+  query.outc: PFS OS
+  query.term: non-squamous metastatic
 
 # recruiting_diabetes:
 #   query.cond: diabetes

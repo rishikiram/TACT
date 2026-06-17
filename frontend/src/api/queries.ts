@@ -1,12 +1,6 @@
 import type { FetchTrialsParams } from "./trials";
 
-// Actively recruiting Phase 2 diabetes trials, capped at 100 results
-export const RECRUITING_DIABETES: FetchTrialsParams = {
-  "query.cond": "diabetes",
-  "filter.overallStatus": "RECRUITING",
-  "filter.advanced": "PHASE2",
-  pageSize: 1000,
-};
+
 
 // All oncology trials, ideally with location data
 export const ONCOLOGY: FetchTrialsParams = {
@@ -25,6 +19,14 @@ export const NSCLC_precision: FetchTrialsParams = {
   "query.intr": "targeted therapy OR precision medicine OR inhibitor",
 };
 
+export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
+  "query.cond": "non-small cell lung cancer OR NSCLC OR non small cell lung cancer",
+  "query.term": "adenocarcinoma",
+  "query.intr": "targeted therapy OR precision medicine",
+};
+
+// ------------------------
+
 export const NSCLC_KRAS: FetchTrialsParams = {
   "query.cond": "NSCLC OR non-small cell lung cancer OR non small cell lung cancer",
   "query.intr": "KRAS G12C inhibitor",
@@ -36,18 +38,20 @@ export const NSCLC_2line: FetchTrialsParams = {
   // "filter.overallStatus": "COMPLETED",
 };
 
-export const NSCLC_ADENOCARCINOMA: FetchTrialsParams = {
-  "query.cond": "non-small cell lung cancer OR NSCLC OR non small cell lung cancer",
-  "query.term": "adenocarcinoma",
-  "query.intr": "targeted therapy OR precision medicine",
+export const NSCLC_PPP: FetchTrialsParams = {
+    "query.cond": "Non-small Cell Lung Cancer",
+    "query.intr": "pembrolizumab platinum pemetrexed",
+    "query.outc": "PFS OS",
+    "query.term": "non-squamous metastatic",
 };
 
+
+
 export const PRESETS: { label: string; params: FetchTrialsParams }[] = [
+  { label: "NSCLC PPP comparators", params: NSCLC_PPP},
   { label: "NSCLC KRAS G12C", params: NSCLC_KRAS },
   { label: "NSCLC 2nd-line treatment", params: NSCLC_2line},
-  { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
-  { label: "NSCLC Precision", params: NSCLC_precision },
-  { label: "NSCLC", params: NSCLC },
-  // { label: "Oncology", params: ONCOLOGY },
-  // { label: "Recruiting Diabetes (Phase 2)", params: RECRUITING_DIABETES },
+  // { label: "NSCLC Adenocarcinoma", params: NSCLC_ADENOCARCINOMA },
+  // { label: "NSCLC Precision", params: NSCLC_precision },
+  // { label: "NSCLC", params: NSCLC },
 ];

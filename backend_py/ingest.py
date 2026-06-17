@@ -164,10 +164,13 @@ def build_traceable_stack() -> None:
         db.insert_and_link_gaps(conn, gaps)
         
     # ingest sources
+        queries_to_use = ["nsclc_kras", "nsclc_2line"]
+        print("Only using queries: ", queries_to_use)
         with open(QUERIES_FILE) as f:
             queries = yaml.safe_load(f)
         for uid,params in queries.items():
-            ingest_ctgov_studies(conn, uid, params)
+            if uid in queries_to_use:
+                ingest_ctgov_studies(conn, uid, params)
 
     # generate set of evidence objects from historical data
         sources, comparator_eos = build_comparator_EOs(conn)
@@ -227,7 +230,6 @@ def build_comparator_EOs(conn) -> tuple:
     return (sources, potential_control_groups)
 
 
-
 def update_claim_status(conn, claim_uid, support_status) -> None:
     cursor = conn.cursor()
     cursor.execute("UPDATE claims SET support_status = ? WHERE uid = ?", (support_status, claim_uid))
@@ -248,7 +250,74 @@ def update_claim_status(conn, claim_uid, support_status) -> None:
         db.update_gap(conn, gap_obj.to_dict())
 
     
+# ----------------
 
+def build_traceable_stack_v2() -> None:
+    db.init_db()
+    tables = ["sources", "evidence_objects", "queries", "studies", "claims", "requirements", "gaps"]
+    before = [db.count(t) for t in tables]
+
+    with db.connect() as conn:
+        # ingest manual EOs
+        with open(SOURCES_FILE) as f:
+            sources_data = yaml.safe_load(f)
+        sources = next(iter(sources_data.values()))
+        sources.sort(key=lambda f: f["uid"])
+        db.insert_sources(conn, sources)
+
+        # ingest manual EOs
+        with open(EOS_FILE) as f:
+            eos_data = yaml.safe_load(f)
+        eos = next(iter(eos_data.values()))
+        eos.sort(key=lambda f: f["uid"])
+        db.insert_and_link_EOs(conn, eos)
+
+        # ingest requirements
+        with open(REQUIREMENTS_FILE) as f:
+            reqs_data = yaml.safe_load(f)
+        requirements = next(iter(reqs_data.values()))
+        requirements.sort(key=lambda f: f["uid"])
+        db.insert_requirements(conn, requirements)
+
+        # build potential gaps, and claims that determine the gaps
+        with open(CLAIMS_FILE) as f:
+            claims_data = yaml.safe_load(f)
+        claims = next(iter(claims_data.values())) 
+        claims.sort(key=lambda f: f["uid"])
+        db.insert_and_link_claims(conn, claims)
+
+        gap_objs = build_gap_objects()
+        gaps = []
+        for g in gap_objs:
+            g.set_severity_and_rationale(conn)
+            gaps.append(g.to_dict())
+        db.insert_and_link_gaps(conn, gaps)
+        
+    # ingest sources
+        with open(QUERIES_FILE) as f:
+            queries = yaml.safe_load(f)
+        for uid,params in queries.items():
+            if uid in ["nsclc_kras", "nsclc_2line"]:
+                ingest_ctgov_studies(conn, uid, params)
+
+    # generate set of evidence objects from historical data
+        sources, comparator_eos = build_comparator_EOs(conn)
+        print(len(sources), len(comparator_eos))
+        db.insert_sources(conn, sources)
+        eo_ids = db.insert_and_link_EOs(conn, comparator_eos)
+
+    # connect evidence objects to support or disprove claims
+        db.link_EOs_to_claims_of_type(conn, eo_ids, "comparator")
+
+    # update gap severity - ✅
+        # update_claim_status(conn, "CLAIM-006", "supported") # works
+    # build (traceable) report 
+
+    after = [db.count(t) for t in tables]
+    s = "----------------\n"
+    for i,t in enumerate(tables):
+        s += f"{t} inserted: {after[i] - before[i]}\n"
+    print(s)
 
 def testing():
     print( db.query("SELECT COUNT(*) FROM sources")[0][0])
