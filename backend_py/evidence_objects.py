@@ -46,6 +46,60 @@ def get_potential_comparator_groups_of_type(study_nctids: list[str], design_grou
     r = [{"nct_id": row[0], "result_group_id": row[1], "design_group_id": row[2], "group_type": row[3], "title": row[4], "description": row[5]} for row in rows]
     return r
 
+def get_arms(nctid_list: list[str]):
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                rg.nct_id,
+                rg.title,
+                ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
+                ARRAY_AGG(DISTINCT dg.group_type) AS group_types,
+                MIN(dg.id)          	AS design_group_id, -- only one is returned, so MIN is ok
+                MAX(rg.description) 	AS description -- distict ones differ insignifigantly
+            FROM result_groups AS rg
+                LEFT JOIN design_groups AS dg
+                    ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+            WHERE rg.nct_id = ANY(%s)
+            GROUP BY
+                rg.nct_id,
+                rg.title
+            """,
+            (nctid_list,)
+        ) 
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "title": row[1], "result_types": row[2], "group_types": row[3], "design_group_id": row[4], "description": row[5]} for row in rows]
+    return r
+
+def get_outcomes():
+    """
+    WITH arms AS (
+	SELECT
+		rg.nct_id,
+		rg.title,
+		ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
+		ARRAY_AGG(DISTINCT dg.group_type) 	AS group_types,
+		ARRAY_AGG(DISTINCT dg.id)          	AS design_group_ids,
+		MAX(rg.description) 	AS description
+	FROM result_groups AS rg
+		LEFT JOIN design_groups AS dg
+			ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+	WHERE rg.nct_id = ANY(ARRAY['NCT03976323', 'NCT04194944', 'NCT02142738', 'NCT06212752', 'NCT05775289', 'NCT05722015', 'NCT02220894', 'NCT03850444', 'NCT02578680', 'NCT03425643', 'NCT04956692', 'NCT03631199', 'NCT02591615', 'NCT04619797', 'NCT04524689', 'NCT05226598', 'NCT03950674', 'NCT03515837', 'NCT04222972'])
+	GROUP BY
+		rg.nct_id,
+		rg.title
+	)
+
+    FROM arms
+	LEFT JOIN result_groups as rg
+		ON rg.nct_id = arms.nct_id AND rg.title = arms.title
+	JOIN outcomes as o
+		ON rg.outcome_id = o.id
+	JOIN outcome_measurements AS om
+		ON om.outcome_id = o.id AND rg.ctgov_group_code = om.ctgov_group_code
+    -- ORDER BY arms.nct_id, arms.title, o.title
+    """
 # inggest comparator groups into 
 def get_comparator_outcome_measurments(study_nctids: list[str]) -> list[dict]:
     with aact.connect_aact() as conn:
@@ -180,40 +234,23 @@ ppp2 = "['NCT03976323', 'NCT04194944', 'NCT02142738', 'NCT06212752', 'NCT0577528
 # review status.
 """
 SELECT
-	rg.nct_id,
-	rg.ctgov_group_code,
-	rg.title,
-	rg.result_type,
-	-- rg.description
-	MIN(rg.description) as first_description
+    rg.nct_id,
+    rg.ctgov_group_code,
+    rg.title,
+    rg.result_type,
+    dg.group_type,
+    MIN(dg.id)              AS design_group_id,
+    MIN(rg.description)     AS description
 FROM result_groups AS rg
--- JOIN outcomes as o
--- 	ON o.id = rg.outcome_id
--- WHERE rg.nct_id = 'NCT04524689'
-WHERE rg.nct_id = ANY(ARRAY['NCT03976323', 'NCT04194944', 'NCT02142738', 'NCT06212752', 'NCT05775289', 'NCT05722015', 'NCT02220894', 'NCT03850444', 'NCT02578680', 'NCT03425643', 'NCT04956692', 'NCT03631199', 'NCT02591615', 'NCT04619797', 'NCT04524689', 'NCT05226598', 'NCT03950674', 'NCT03515837', 'NCT04222972'])
-	-- AND rg.result_type in ('Outcome')--, 'Reported Event')
+    LEFT JOIN design_groups AS dg
+        ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+WHERE rg.nct_id = ANY(%s)
 GROUP BY
-	rg.nct_id,
-	rg.ctgov_group_code,
-	rg.title,
-	-- rg.description,
-	rg.result_type
-
--- SELECT
--- 	rg.nct_id,
--- 	MIN(rg.id)           AS result_group_id,
--- 	MIN(dg.id)           AS design_group_id,
--- 	dg.group_type,
--- 	rg.title,
--- 	MIN(rg.description)
--- FROM result_groups AS rg
--- JOIN design_groups AS dg 
--- 	ON  dg.nct_id = rg.nct_id AND dg.title = rg.title
--- WHERE rg.nct_id = ANY(ARRAY['NCT02142738', 'NCT02220894', 'NCT02578680', 'NCT03515837', 'NCT03631199', 'NCT03645928', 'NCT03774732', 'NCT03850444', 'NCT03950674', 'NCT03976323', 'NCT04094909', 'NCT04194944', 'NCT04222972', 'NCT04547504', 'NCT04619797', 'NCT04736173', 'NCT04956692', 'NCT05048797', 'NCT05226598', 'NCT05255302', 'NCT05502237', 'NCT05555732', 'NCT05687266', 'NCT05722015', 'NCT05775289', 'NCT05791097', 'NCT05979818', 'NCT06008093', 'NCT06151574', 'NCT06212752', 'NCT06236438', 'NCT06311721', 'NCT06627647', 'NCT06687369', 'NCT06711900', 'NCT06726265', 'NCT06772623', 'NCT06793215', 'NCT06840782', 'NCT06875310', 'NCT06899126', 'NCT07178795', 'NCT07524257'])
--- GROUP BY
--- 	rg.nct_id,
--- 	dg.group_type,
--- 	rg.title
+    rg.nct_id,
+    rg.ctgov_group_code,
+    rg.title,
+    dg.group_type,
+    rg.result_type
 """
 
 studies_view_link = "https://clinicaltrials.gov/expert-search?term=NCT03976323%0ANCT04194944%0ANCT02142738%0ANCT06212752%0ANCT05775289%0ANCT05722015%0ANCT02220894%0ANCT03850444%0ANCT02578680%0ANCT03425643%0ANCT04956692%0ANCT03631199%0ANCT02591615%0ANCT04619797%0ANCT04524689%0ANCT05226598%0ANCT03950674%0ANCT03515837%0ANCT04222972&page=2"

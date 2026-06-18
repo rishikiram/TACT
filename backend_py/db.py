@@ -14,6 +14,7 @@ allowed_gaps = ", ".join(f"'{s}'" for s in GAP_SEVERITY_ENUM)
 
 TABLES_SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS studies (
+    -- UID?
     nct_id                  TEXT PRIMARY KEY,
     title                   TEXT,
     status                  TEXT,
