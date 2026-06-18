@@ -41,8 +41,12 @@ export const NSCLC_2line: FetchTrialsParams = {
 export const NSCLC_PPP: FetchTrialsParams = {
     "query.cond": "Non-small Cell Lung Cancer",
     "query.intr": "pembrolizumab platinum pemetrexed",
-    "query.outc": "PFS OS",
-    "query.term": "non-squamous metastatic",
+    // "query.outc": "PFS OS",
+    "query.term": "non-squamous",
+  // nsclc_ppp:
+    // query.cond: Non-small Cell Lung Cancer
+    // query.intr: pembrolizumab platinum pemetrexed
+    // query.term: non-squamous 
 };
 
 

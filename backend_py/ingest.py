@@ -274,6 +274,7 @@ def build_traceable_stack_v2() -> None:
         for uid,params in queries.items():
             if uid in queries_to_use:
                 ingest_ctgov_studies(conn, uid, params)
+        # filter for studies with results
 
     # generate set of evidence objects from historical data
         sources, comparator_eos = build_comparator_EOs(conn, "nsclc_ppp")

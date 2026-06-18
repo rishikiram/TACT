@@ -33,8 +33,9 @@ nsclc_2line:
 nsclc_ppp:
   query.cond: Non-small Cell Lung Cancer
   query.intr: pembrolizumab platinum pemetrexed
-  query.outc: PFS OS
-  query.term: non-squamous metastatic
+  query.term: non-squamous 
+  # excluded metastatic because I got a few extra good studies without it
+  # query.outc: PFS OS
 
 # recruiting_diabetes:
 #   query.cond: diabetes
