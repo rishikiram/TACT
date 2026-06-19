@@ -72,34 +72,70 @@ def get_arms(nctid_list: list[str]):
     r = [{"nct_id": row[0], "title": row[1], "result_types": row[2], "group_types": row[3], "design_group_id": row[4], "description": row[5]} for row in rows]
     return r
 
-def get_outcomes():
-    """
-    WITH arms AS (
-	SELECT
-		rg.nct_id,
-		rg.title,
-		ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
-		ARRAY_AGG(DISTINCT dg.group_type) 	AS group_types,
-		ARRAY_AGG(DISTINCT dg.id)          	AS design_group_ids,
-		MAX(rg.description) 	AS description
-	FROM result_groups AS rg
-		LEFT JOIN design_groups AS dg
-			ON dg.nct_id = rg.nct_id AND dg.title = rg.title
-	WHERE rg.nct_id = ANY(ARRAY['NCT03976323', 'NCT04194944', 'NCT02142738', 'NCT06212752', 'NCT05775289', 'NCT05722015', 'NCT02220894', 'NCT03850444', 'NCT02578680', 'NCT03425643', 'NCT04956692', 'NCT03631199', 'NCT02591615', 'NCT04619797', 'NCT04524689', 'NCT05226598', 'NCT03950674', 'NCT03515837', 'NCT04222972'])
-	GROUP BY
-		rg.nct_id,
-		rg.title
-	)
+def get_endpoints(nctid_list: list[str]):
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                rg.nct_id,
+                rg.title,
+                ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
+                ARRAY_AGG(DISTINCT dg.group_type) AS group_types,
+                MIN(dg.id)          	AS design_group_id, -- only one is returned, so MIN is ok
+                MAX(rg.description) 	AS description -- distict ones differ insignifigantly
+            FROM result_groups AS rg
+                LEFT JOIN design_groups AS dg
+                    ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+            WHERE rg.nct_id = ANY(%s)
+            GROUP BY
+                rg.nct_id,
+                rg.title
+            """,
+            (nctid_list,)
+        ) 
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "title": row[1], "result_types": row[2], "group_types": row[3], "design_group_id": row[4], "description": row[5]} for row in rows]
+    return r
 
-    FROM arms
-	LEFT JOIN result_groups as rg
-		ON rg.nct_id = arms.nct_id AND rg.title = arms.title
-	JOIN outcomes as o
-		ON rg.outcome_id = o.id
-	JOIN outcome_measurements AS om
-		ON om.outcome_id = o.id AND rg.ctgov_group_code = om.ctgov_group_code
-    -- ORDER BY arms.nct_id, arms.title, o.title
+def get_result_groups_and_endpoints(nct_ids):
+    """Result groups are the groups that are results are reported for. 
+    Different endpoints are reported split into different groups. 
+    This list the exaustive list of groups, and the endpoints that are reported for each.
     """
+    with aact.connect_aact() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                rg.nct_id,
+                rg.title,
+                rg.ctgov_group_code,
+                -- ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
+                ARRAY_AGG(DISTINCT o.title) AS endpoints,
+                ARRAY_AGG(DISTINCT dg.group_type) 	AS group_types,
+                ARRAY_AGG(DISTINCT dg.id)          	AS design_group_ids,
+                MAX(rg.description) 	AS description
+            FROM result_groups AS rg
+                LEFT JOIN design_groups AS dg
+                    ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+                JOIN outcomes AS o
+                        ON rg.outcome_id = o.id
+            WHERE rg.nct_id = ANY(%s)
+            GROUP BY
+                rg.ctgov_group_code,
+                rg.title,
+                rg.nct_id
+            ORDER BY 
+                rg.nct_id,
+                rg.title,
+                rg.ctgov_group_code
+            """,
+            (nct_ids,)
+        )
+        rows = cur.fetchall()
+    r = [{"nct_id": row[0], "title": row[1], "ctgov_group_code": row[2], "measurements": row[3], "group_types": row[4], "design_group_ids": row[5], "description": row[6]} for row in rows]
+    return r
 # inggest comparator groups into 
 def get_comparator_outcome_measurments(study_nctids: list[str]) -> list[dict]:
     with aact.connect_aact() as conn:
@@ -251,6 +287,54 @@ GROUP BY
     rg.title,
     dg.group_type,
     rg.result_type
+"""
+
+"""
+WITH arms AS (
+	SELECT
+		rg.nct_id,
+		rg.title,
+		ARRAY_AGG(DISTINCT rg.result_type) AS result_types,
+		ARRAY_AGG(DISTINCT dg.group_type) 	AS group_types,
+		ARRAY_AGG(DISTINCT dg.id)          	AS design_group_ids,
+		MAX(rg.description) 	AS description
+	FROM result_groups AS rg
+		LEFT JOIN design_groups AS dg
+			ON dg.nct_id = rg.nct_id AND dg.title = rg.title
+	WHERE rg.nct_id = ANY(ARRAY['NCT03976323', 'NCT04194944', 'NCT02142738', 'NCT06212752', 'NCT05775289', 'NCT05722015', 'NCT02220894', 'NCT03850444', 'NCT02578680', 'NCT03425643', 'NCT04956692', 'NCT03631199', 'NCT02591615', 'NCT04619797', 'NCT04524689', 'NCT05226598', 'NCT03950674', 'NCT03515837', 'NCT04222972'])
+	GROUP BY
+		rg.nct_id,
+		rg.title
+	)
+SELECT
+	arms.nct_id,
+	arms.title as arm_title,
+	rg.ctgov_group_code as rg_gc,
+	o.title AS outcome_title,
+	-- o.id as o_id,
+	om.ctgov_group_code as om_gc,
+	om.units,
+	om.param_value
+	
+	-- om.classification,
+	-- -- om.description AS om_desc,
+	-- om.param_type,
+-- FROM outcomes as o
+-- 	JOIN outcome_measurements AS om
+-- 		ON om.outcome_id = o.id
+-- 	JOIN result_groups as rg
+-- 		ON rg.outcome_id = o.id
+-- 	RIGHT JOIN arms
+-- 		ON rg.nct_id = arms.nct_id AND rg.title = arms.title
+FROM arms
+	LEFT JOIN result_groups as rg
+		ON rg.nct_id = arms.nct_id AND rg.title = arms.title
+	JOIN outcomes as o
+		ON rg.outcome_id = o.id
+	JOIN outcome_measurements AS om
+		ON om.outcome_id = o.id AND rg.ctgov_group_code = om.ctgov_group_code
+ORDER BY arms.nct_id, arms.title, o.title
+TACT/backend_py/evidence_objects.py
 """
 
 studies_view_link = "https://clinicaltrials.gov/expert-search?term=NCT03976323%0ANCT04194944%0ANCT02142738%0ANCT06212752%0ANCT05775289%0ANCT05722015%0ANCT02220894%0ANCT03850444%0ANCT02578680%0ANCT03425643%0ANCT04956692%0ANCT03631199%0ANCT02591615%0ANCT04619797%0ANCT04524689%0ANCT05226598%0ANCT03950674%0ANCT03515837%0ANCT04222972&page=2"

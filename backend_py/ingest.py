@@ -210,31 +210,30 @@ def build_comparator_EOs(conn, query_uid) -> tuple:
     """
 
     # POTENTIAL_CONTROL_GROUPS_QUERY_UID = "nsclc_2line"
-    control_group_nctids = eos.get_nctids(conn, query_uid)
-    all_group_types = set(eos.GROUP_TYPES)
-    evidence_list = eos.get_potential_comparator_groups_of_type(control_group_nctids, list(all_group_types)) 
+    nct_ids = eos.get_nctids(conn, query_uid)
+    evidence_list = eos.get_result_groups_and_endpoints(nct_ids) 
 
     # build 'source' related to this aact query
     sources = [
         {
             "url": "aact-db.ctti-clinicaltrials.org",
-            "title": "Potential Comparator Groups with Results",
+            "title": "Arms and endpoints",
             "type": "AACT-CTTI query",
-            "uid": "SRC-101",
-            "how_to_recreate": "query tables design_groups and result_groups. Link by nct_id and title. This link is not enfored for all ctgov studies, but some studies follow it. Pull fields {nct_id, title, dg,id, rg,id, dg.group_type, rg.description}"
+            "uid": "SRC-102",
+            "how_to_recreate": "query tables result_groups, design_groups and outcomes. Join and group by nct_id and result_groups.title (also join on outcomes.id), then aggregate over outcomes.title."
         }
     ]
-    potential_control_groups = [{
+    result_groups = [{
             # "uid": , TODO how can I derrive a stable human name...
             "nct_id": evi["nct_id"],
-            "source_uids": ["SRC-101"],
-            "normalized_value": evi["group_type"],
-            "type": "comparator", # TODO use a standard enumerator somehow
+            "source_uids": sources[0]["uid"],
+            "normalized_value": evi["measurements"],
+            "type": "list of measurments types",
             "statement": json.dumps(evi, indent=2),
             "confidence": "low" 
         }
         for evi in evidence_list]
-    return (sources, potential_control_groups)
+    return (sources, result_groups)
 
 
 def update_claim_status(conn, claim_uid, support_status) -> None:
@@ -295,8 +294,51 @@ def build_traceable_stack_v2() -> None:
             s += f"{t} inserted: {after[i] - before[i]}\n"
     print(s)
 
-def testing():
-    print( db.query("SELECT COUNT(*) FROM sources")[0][0])
+def comparator_test():
+    import os
+    queries_to_use = ["nsclc_ppp"]
+    if not os.path.isfile(db.DB_PATH):
+        with db.connect() as conn:
+            # ingest sources
+            print("Using queries: ", queries_to_use)
+            with open(QUERIES_FILE) as f:
+                queries = yaml.safe_load(f)
+            for uid,params in queries.items():
+                if uid in queries_to_use:
+                    ingest_ctgov_studies(conn, uid, params)
+    
+    with db.connect() as conn:
+        nct_ids = eos.get_nctids(conn, queries_to_use[0])
+        evidence_list = eos.get_result_groups_and_endpoints(nct_ids)
+
+        # json_file = Path(__file__).parent.parent / "data" / "result_groups.json"
+        # with open(json_file, "w") as f:
+        #     json.dump(evidence_list, f, indent=2)
+        
+        import csv
+        # edit this mapping to rename columns in the output CSV (old_name -> new_name)
+        column_renames = {
+            "nct_id": "nct_id", 
+            "title": "group_title", 
+            "measurements": "reported_measurement_titles", 
+            "group_types": "matching_design_group_label", 
+            # "design_group_ids": row[5], 
+            "description": "group_description",
+            "ctgov_group_code": "ctgov_group_code", 
+        }
+        csv_file = Path(__file__).parent.parent / "data" / "result_groups.csv"
+        with open(csv_file, "w", newline="") as f:
+            fieldnames = [column_renames.get(k, k) for k in evidence_list[0].keys()]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in evidence_list:
+                row = {**row, "measurements": json.dumps(row["measurements"])}
+                row = {column_renames.get(k, k): v for k, v in row.items()}
+                writer.writerow(row)
+
+
+
 
 if __name__ == "__main__":
-    build_traceable_stack_v2()
+    # build_traceable_stack_v2()
+    comparator_test()
