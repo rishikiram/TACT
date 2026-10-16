@@ -1,4 +1,4 @@
-.PHONY: dev frontend backend backend-py ingest dataDict-init ingest-traceable
+.PHONY: dev frontend backend database ingest dataDict-init ingest-traceable
 
 # Start all three processes in parallel
 dev:
@@ -6,7 +6,7 @@ dev:
 	@trap 'kill 0' INT; \
 	  (cd frontend && npm run dev) & \
 	  (cd backend && npx ts-node server.ts) & \
-	  (cd backend_py && uvicorn api:app --reload --port 8010) & \
+	  (cd database && uvicorn api:app --reload --port 8010) & \
 	  wait
 
 frontend:
@@ -15,12 +15,12 @@ frontend:
 backend:
 	cd backend && npx ts-node server.ts
 
-# backend-py:
-# 	cd backend_py && uvicorn api:app --reload --port 8010
+# database:
+# 	cd database && uvicorn api:app --reload --port 8010
 
 ingest:
-	python -m backend_py.ingest 
+	python -m database.ingest 
 
 # # Bootstrap the DataDictionary table from the current studies schema
 # dataDict-init:
-# 	python -c "from backend_py.db import build_data_dictionary; build_data_dictionary()"
+# 	python -c "from database.db import build_data_dictionary; build_data_dictionary()"

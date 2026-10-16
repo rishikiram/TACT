@@ -1,6 +1,6 @@
 # Stack
 
-## Backend (`backend_py`) — Python
+## Backend (`database`) — Python
 
 | Package | Purpose |
 |---|---|

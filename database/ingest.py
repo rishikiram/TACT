@@ -16,9 +16,9 @@ import os
 import logging
 import datetime
 
-import backend_py.ctgov_transform as ctgov_transform
-import backend_py.ctgov as ctgov
-import backend_py.db as db
+import database.ctgov_transform as ctgov_transform
+import database.ctgov as ctgov
+import database.db as db
 
 QUERIES_FILE = Path(__file__).parent / "queries_ctgov.yaml"
 

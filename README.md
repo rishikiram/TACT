@@ -4,7 +4,7 @@ A toolkit for exploring ClinicalTrials.gov data — a Python pipeline for ingest
 
 ```
 TACT/
-├── backend_py/          # Python data pipeline — see backend_py/README.md
+├── database/          # Python data pipeline — see database/README.md
 ├── data/
 │   └── clinical_trials.db
 ├── frontend/             # React + Vite web app
@@ -14,11 +14,11 @@ TACT/
 
 ## Python Data Pipeline
 
-See [`backend_py/README.md`](backend_py/README.md) for the data model. From the repo root:
+See [`database/README.md`](database/README.md) for the data model. From the repo root:
 
 ```bash
-pip install -r backend_py/requirements.txt
-make ingest         # fetch from CT.gov, write to data/clinical_trials.db (presets: backend_py/queries_ctgov.yaml)
+pip install -r database/requirements.txt
+make ingest         # fetch from CT.gov, write to data/clinical_trials.db (presets: database/queries_ctgov.yaml)
 ```
 
 Or `make dev` to start the frontend, Node backend, and FastAPI backend together.

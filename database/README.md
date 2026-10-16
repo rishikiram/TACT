@@ -23,5 +23,5 @@ Queries represent a specific search of CTGov, and are linked to a set of studies
 Studies represent a registered study from CTGov. Right now, they are mostly there because they are easy to store.
 
 ## Cache
-`ctgov.fetch_all_pages` caches raw CT.gov responses to disk in `backend_py/cache/`, keyed by an MD5 hash of the sorted query params (`cache.py`). It's an LRU of the last 10 queries — on a hit, no HTTP call is made; on a write past the limit, the least-recently-used entry is evicted. Recency (including cache hits, not just writes) is persisted in `cache/_index.json` so the LRU order survives process restarts.
+`ctgov.fetch_all_pages` caches raw CT.gov responses to disk in `database/cache/`, keyed by an MD5 hash of the sorted query params (`cache.py`). It's an LRU of the last 10 queries — on a hit, no HTTP call is made; on a write past the limit, the least-recently-used entry is evicted. Recency (including cache hits, not just writes) is persisted in `cache/_index.json` so the LRU order survives process restarts.
 

@@ -92,7 +92,7 @@ export default function DbExplorer() {
       {presetsError && (
         <p style={{ color: "red" }}>
           Could not reach the database API. Make sure the FastAPI server is running:{" "}
-          <code>cd backend_py && uvicorn api:app --reload --port 8010</code>
+          <code>uvicorn database.api:app --reload --port 8010</code>
         </p>
       )}
 

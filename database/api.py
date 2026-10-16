@@ -1,5 +1,5 @@
 """
-FastAPI skeleton for serving clinical trial data (backend_py/db.py) to a frontend.
+FastAPI skeleton for serving clinical trial data (database/db.py) to a frontend.
 
 This file intentionally contains no real query logic — it's a starting point
 sketching out what endpoints a frontend would likely need, and which db.py
@@ -17,7 +17,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend_py.db import connect, DB_PATH
+from database.db import connect, DB_PATH
 
 app = FastAPI(title="TACT DB API", description="Serves clinical trial data from local SQLite")
 

@@ -2,7 +2,7 @@ import hashlib
 import time
 import requests
 
-import backend_py.cache as cache
+import database.cache as cache
 
 CT_GOV_BASE = "https://clinicaltrials.gov/api/v2/studies"
 PAGE_CAP = 10  # max 10,000 studies per request
