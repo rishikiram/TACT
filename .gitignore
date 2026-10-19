@@ -29,4 +29,5 @@ data/nsclc_ppp.json
 
 figures/
 
-
+#vscode 
+.vscode/*
